@@ -5,6 +5,7 @@ import org.hibernate.annotations.GenericGenerator;
 import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 public class Player {
@@ -34,7 +35,7 @@ public class Player {
         return id;
     }
 
-    public Set getParticipationsPerPlayer() {
+    public Set<GamePlayer> getParticipationsPerPlayer() {
         return participationsPerPlayer;
     }
 
@@ -45,6 +46,10 @@ public class Player {
     public void addParticipationPerPlayer(GamePlayer participation) {
         participationsPerPlayer.add(participation);
         participation.setPlayer(this);
+    }
+
+    public Set<Game> getGames() {
+        return this.getParticipationsPerPlayer().stream().map(gp -> gp.getGame()).collect(Collectors.toSet());
     }
 
     @Override

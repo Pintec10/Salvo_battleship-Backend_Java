@@ -1,11 +1,13 @@
 package com.codeoftheweb.salvo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 public class Game {
@@ -24,13 +26,18 @@ public class Game {
         this.creationDate = creationDate;
     }
 
+
     //methods
     public Date getCreationDate() {
         return creationDate;
     }
 
-    public Set getParticipationsPerGame() {
+    public Set<GamePlayer> getParticipationsPerGame() {
         return participationsPerGame;
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public void setCreationDate(Date creationDate) {
@@ -40,6 +47,11 @@ public class Game {
     public void addParticipationPerGame(GamePlayer participation) {
         participationsPerGame.add(participation);
         participation.setGame(this);
+    }
+
+    @JsonIgnore
+    public Set<Player> getPlayers() {
+        return this.participationsPerGame.stream().map( gp -> gp.getPlayer()).collect(Collectors.toSet());
     }
 
     @Override

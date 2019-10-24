@@ -1,6 +1,7 @@
 package com.codeoftheweb.salvo;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -19,17 +20,24 @@ public class GamePlayer {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name="player_id")
+    //@JsonIgnore
     private Player player;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name="game_id")
+    //@JsonIgnore
     private Game game;
 
 
     //constructors
     public GamePlayer() {}
-    public GamePlayer(Date creationDate) {
-        this.joinGameDate = creationDate;
+    public GamePlayer(Date joinDate) {
+        this.joinGameDate = joinDate;
+    }
+    public GamePlayer(Date joinDate, Player pla, Game gam) {
+        this.joinGameDate = joinDate;
+        this.player = pla;
+        this.game = gam;
     }
 
 
@@ -37,23 +45,20 @@ public class GamePlayer {
     public Date getJoinGameDate() {
         return joinGameDate;
     }
-
     public Player getPlayer() {
         return player;
     }
-
     public Game getGame() {
         return game;
     }
+    public Long getId() { return id;}
 
     public void setJoinGameDate(Date date){
         this.joinGameDate = date;
     }
-
     public void setPlayer(Player player) {
         this.player = player;
     }
-
     public void setGame(Game game) {
         this.game = game;
     }
