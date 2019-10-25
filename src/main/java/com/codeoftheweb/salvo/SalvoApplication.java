@@ -5,7 +5,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 @SpringBootApplication
 public class SalvoApplication {
@@ -15,11 +17,12 @@ public class SalvoApplication {
 	}
 
 	@Bean
-	public CommandLineRunner initParticipationData(PlayerRepository pRepository, GameRepository gRepository, GamePlayerRepository gpRepository) {
+	public CommandLineRunner initParticipationData(PlayerRepository pRepository, GameRepository gRepository,
+			GamePlayerRepository gpRepository, ShipRepository sRepository) {
 		return (args) -> {
 			Player pla1 = new Player("j.bauer@ctu.gov");
 			Player pla2 = new Player("c.obrian@ctu.gov");
-			Player pla3 = new Player("kim_bauer@gmail.com ");
+			Player pla3 = new Player("kim_bauer@gmail.com");
 			Player pla4 = new Player("t.almeida@ctu.gov");
 			pRepository.save(pla1);
 			pRepository.save(pla2);
@@ -85,6 +88,63 @@ public class SalvoApplication {
 			gpRepository.save(par12);
 			gpRepository.save(par13);
 			gpRepository.save(par14);
+
+
+			List<String> loc01 = Arrays.asList("H2", "H3", "H4");
+			List<String> loc02 = Arrays.asList("E1", "F1", "G1");
+			List<String> loc03 = Arrays.asList("B4", "B5");
+			List<String> loc04 = Arrays.asList("B5", "C5", "D5");
+			List<String> loc05 = Arrays.asList("F1", "F2");
+			List<String> loc06 = Arrays.asList("B5", "C5", "D5");
+			List<String> loc07 = Arrays.asList("C6", "C7");
+			List<String> loc08 = Arrays.asList("A2", "A3", "A4");
+			List<String> loc09 = Arrays.asList("G6", "H6");
+			List<String> loc10 = Arrays.asList("B5", "C5", "D5");
+			List<String> loc11 = Arrays.asList("C6", "C7");
+			List<String> loc12 = Arrays.asList("A2", "A3", "A4");
+			List<String> loc13 = Arrays.asList("G6", "H6");
+			List<String> loc14 = Arrays.asList("B5", "C5", "D5");
+			List<String> loc15 = Arrays.asList("C6", "C7");
+			List<String> loc16 = Arrays.asList("A2", "A3", "A4");
+			List<String> loc17 = Arrays.asList("G6", "H6");
+			List<String> loc18 = Arrays.asList("B5", "C5", "D5");
+			List<String> loc19 = Arrays.asList("C6", "C7");
+			List<String> loc20 = Arrays.asList("A2", "A3", "A4");
+			List<String> loc21 = Arrays.asList("G6", "H6");
+			List<String> loc22 = Arrays.asList("B5", "C5", "D5");
+			List<String> loc23 = Arrays.asList("C6", "C7");
+			List<String> loc24 = Arrays.asList("B5", "C5", "D5");
+			List<String> loc25 = Arrays.asList("C6", "C7");
+			List<String> loc26 = Arrays.asList("A2", "A3", "A4");
+			List<String> loc27 = Arrays.asList("G6", "H6");
+			sRepository.save(new Ship("Destroyer", par01, loc01));
+			sRepository.save(new Ship("Submarine", par01, loc02));
+			sRepository.save(new Ship("Patrol Boat", par01, loc03));
+			sRepository.save(new Ship("Destroyer", par02, loc04));
+			sRepository.save(new Ship("Patrol Boat", par02, loc05));
+			sRepository.save(new Ship("Destroyer", par03, loc06));
+			sRepository.save(new Ship("Patrol Boat", par03, loc07));
+			sRepository.save(new Ship("Submarine", par04, loc08));
+			sRepository.save(new Ship("Patrol Boat", par04, loc09));
+			sRepository.save(new Ship("Destroyer", par05, loc10));
+			sRepository.save(new Ship("Patrol Boat", par05, loc11));
+			sRepository.save(new Ship("Submarine", par06, loc12));
+			sRepository.save(new Ship("Patrol Boat", par06, loc13));
+			sRepository.save(new Ship("Destroyer", par07, loc14));
+			sRepository.save(new Ship("Patrol Boat", par07, loc15));
+			sRepository.save(new Ship("Submarine", par08, loc16));
+			sRepository.save(new Ship("Patrol Boat", par08, loc17));
+			sRepository.save(new Ship("Destroyer", par09, loc18));
+			sRepository.save(new Ship("Patrol Boat", par09, loc19));
+			sRepository.save(new Ship("Submarine", par10, loc20));
+			sRepository.save(new Ship("Patrol Boat", par10, loc21));
+			sRepository.save(new Ship("Destroyer", par11, loc22));
+			sRepository.save(new Ship("Patrol Boat", par11, loc23));
+			sRepository.save(new Ship("Destroyer", par13, loc24));
+			sRepository.save(new Ship("Patrol Boat", par13, loc25));
+			sRepository.save(new Ship("Submarine", par14,loc26));
+			sRepository.save(new Ship("Patrol Boat", par14, loc27));
+
 		};
 	}
 }

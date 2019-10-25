@@ -23,7 +23,7 @@ public class SalvoController {
     Map<String, Object> output = new LinkedHashMap<>();
     output.put("id", game.getId());
     output.put("created", game.getCreationDate());
-    output.put("Gameplayers (participations)", getAllGamePlayers(game.getParticipationsPerGame()));
+    output.put("gameplayers", getAllGamePlayers(game.getParticipationsPerGame()));
     return output;
     }
 
