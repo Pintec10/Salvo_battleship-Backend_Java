@@ -4,9 +4,7 @@ import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 public class Ship {
@@ -21,7 +19,7 @@ public class Ship {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name="gameplayer_id")
-    private GamePlayer gameplayer;
+    private GamePlayer gamePlayer;
 
     @ElementCollection
     @Column(name="locations")
@@ -30,9 +28,9 @@ public class Ship {
 
     //constructors
     public Ship(){};
-    public Ship(String type, GamePlayer gameplayer, List<String> locations) {
+    public Ship(String type, GamePlayer gamePlayer, List<String> locations) {
         this.type = type;
-        this.gameplayer = gameplayer;
+        this.gamePlayer = gamePlayer;
         this.locations = locations;
     }
 
@@ -40,14 +38,14 @@ public class Ship {
     //methods
     public Long getId() { return id; }
     public String getType() { return type; }
-    public GamePlayer getGameplayer() { return gameplayer; }
+    public GamePlayer getGamePlayer() { return gamePlayer; }
     public List<String> getLocations() { return locations; }
 
     public void setType(String type) {
         this.type = type;
     }
-    public void setGameplayer(GamePlayer gameplayer) {
-        this.gameplayer = gameplayer;
+    public void setGamePlayer(GamePlayer gamePlayer) {
+        this.gamePlayer = gamePlayer;
     }
     public void setLocations(List<String> locations) {
         this.locations = locations;

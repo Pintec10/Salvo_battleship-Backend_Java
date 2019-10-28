@@ -5,9 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 public class GamePlayer {
@@ -28,8 +26,8 @@ public class GamePlayer {
     @JoinColumn(name="game_id")
     private Game game;
 
-    @OneToMany(mappedBy="gameplayer")
-    private Set<Ship> boatFleet = new HashSet<>();
+    @OneToMany(mappedBy="gamePlayer")
+    private List<Ship> boatFleet = new ArrayList<>();
 
     //constructors
     public GamePlayer() {}
@@ -54,6 +52,7 @@ public class GamePlayer {
         return game;
     }
     public Long getId() { return id;}
+    public List<Ship> getBoatFleet() { return boatFleet;}
 
     public void setJoinGameDate(Date date){
         this.joinGameDate = date;
