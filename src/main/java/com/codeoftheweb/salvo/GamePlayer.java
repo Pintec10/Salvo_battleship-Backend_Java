@@ -1,7 +1,6 @@
 package com.codeoftheweb.salvo;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -27,7 +26,7 @@ public class GamePlayer {
     private Game game;
 
     @OneToMany(mappedBy="gamePlayer")
-    private List<Ship> boatFleet = new ArrayList<>();
+    private Set<Ship> boatFleet = new HashSet<Ship>();
 
     //constructors
     public GamePlayer() {}
@@ -52,7 +51,7 @@ public class GamePlayer {
         return game;
     }
     public Long getId() { return id;}
-    public List<Ship> getBoatFleet() { return boatFleet;}
+    public Set<Ship> getBoatFleet() { return boatFleet;}
 
     public void setJoinGameDate(Date date){
         this.joinGameDate = date;

@@ -15,11 +15,14 @@ public class SalvoController {
 
 
     @Autowired
-    private GameRepository repo;
+    private GameRepository gamerepo;
+
+    @Autowired
+    private GamePlayerRepository gprepo;
 
     @RequestMapping("/games")
     public List<Object> getAllGamesInfo() {
-        return repo.findAll().stream().map(oneGame -> gameMapper(oneGame)).collect(Collectors.toList());
+        return gamerepo.findAll().stream().map(oneGame -> gameMapper(oneGame)).collect(Collectors.toList());
     }
 
     private Map<String, Object> gameMapper(Game game) {
@@ -49,8 +52,7 @@ public class SalvoController {
     }
 
 
-    @Autowired
-    private GamePlayerRepository gprepo;
+
 
     @RequestMapping("game_view/{gamePlayerID}")
     public Map<String, Object> getGameViewInfo(@PathVariable Long gamePlayerID) {
