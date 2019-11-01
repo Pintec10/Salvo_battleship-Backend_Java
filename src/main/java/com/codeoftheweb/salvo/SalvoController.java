@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
 @RestController
 @RequestMapping("/api")
 public class SalvoController {
@@ -52,8 +53,6 @@ public class SalvoController {
     }
 
 
-
-
     @RequestMapping("game_view/{gamePlayerID}")
     public Map<String, Object> getGameViewInfo(@PathVariable Long gamePlayerID) {
         GamePlayer currentGamePlayer = gprepo.findById(gamePlayerID).orElse(null);
@@ -65,14 +64,48 @@ public class SalvoController {
                 .map(item -> shipMapper(item)).collect(Collectors.toList());
         gameView.put("ships", shipView);
 
+
+
+        //Set<Object> salvoView = new HashSet<>();
+
+        Set<GamePlayer> bothGamePlayers = currentGamePlayer.getGame().getParticipationsPerGame();
+        //Set<Set> bothSalvoLists = bothGamePlayers.stream().map(oneGP -> oneGP.getFiredSalvoes()).collect(Collectors.toSet());
+        //bothSalvoLists.stream().map(oneSalvoList -> oneSalvoList.stream().map(oneSalvo.get))
+
+        List<Object> salvoView = bothGamePlayers.stream().map(oneGP -> mapGpForSalvo(oneGP)).collect(Collectors.toList());
+
+
+    //salvoView.add(salvoMapper(ONESALVO));
+
+        gameView.put("salvoes", salvoView);
         return gameView;
     }
 
+    Map<String, Object> mapGpForSalvo(GamePlayer oneGp) {
+        Map<String, Object> output = new HashMap<>();
+        output.put("id", oneGp.getId()); //to remove
+        output.put("salvoes", getAllFiredSalvoes(oneGp.getFiredSalvoes()) );
+        return output;
+    }
 
-    public Map<String, Object> shipMapper(Ship oneShip) {
+    public List<Object> getAllFiredSalvoes(Set<Salvo> salvoList) {
+        return salvoList.stream().map(oneSalvo -> salvoMapper(oneSalvo)).collect(Collectors.toList());
+    }
+
+    private Map<String, Object> salvoMapper(Salvo oneSalvo){
+        Map <String, Object> output = new LinkedHashMap<>();
+        output.put("player", oneSalvo.getGamePlayer().getPlayer());
+        output.put("turn", oneSalvo.getTurn());
+        //output.put("locations", oneSalvo.getLocations());
+        return output;
+    }
+
+    private Map<String, Object> shipMapper(Ship oneShip) {
         Map <String, Object> output = new LinkedHashMap<>();
         output.put("type", oneShip.getType());
         output.put("location", oneShip.getLocations());
         return output;
     }
+
+
 }

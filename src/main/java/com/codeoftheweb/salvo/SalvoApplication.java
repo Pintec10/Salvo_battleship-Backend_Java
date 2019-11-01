@@ -5,9 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @SpringBootApplication
 public class SalvoApplication {
@@ -17,8 +15,8 @@ public class SalvoApplication {
 	}
 
 	@Bean
-	public CommandLineRunner initParticipationData(PlayerRepository pRepository, GameRepository gRepository,
-			GamePlayerRepository gpRepository, ShipRepository sRepository) {
+	public CommandLineRunner initParticipationData(PlayerRepository pRepository, GameRepository gmRepository,
+			GamePlayerRepository gpRepository, ShipRepository shRepository, SalvoRepository slRepository) {
 		return (args) -> {
 			Player pla1 = new Player("j.bauer@ctu.gov");
 			Player pla2 = new Player("c.obrian@ctu.gov");
@@ -45,14 +43,14 @@ public class SalvoApplication {
 			Game gam6 = new Game(d6);
 			Game gam7 = new Game(d7);
 			Game gam8 = new Game(d8);
-			gRepository.save(gam1);
-			gRepository.save(gam2);
-			gRepository.save(gam3);
-			gRepository.save(gam4);
-			gRepository.save(gam5);
-			gRepository.save(gam6);
-			gRepository.save(gam7);
-			gRepository.save(gam8);
+			gmRepository.save(gam1);
+			gmRepository.save(gam2);
+			gmRepository.save(gam3);
+			gmRepository.save(gam4);
+			gmRepository.save(gam5);
+			gmRepository.save(gam6);
+			gmRepository.save(gam7);
+			gmRepository.save(gam8);
 
 			GamePlayer par01 = new GamePlayer(d1);
 			par01.setPlayer(pla1);
@@ -117,33 +115,77 @@ public class SalvoApplication {
 			List<String> loc25 = Arrays.asList("C6", "C7");
 			List<String> loc26 = Arrays.asList("A2", "A3", "A4");
 			List<String> loc27 = Arrays.asList("G6", "H6");
-			sRepository.save(new Ship("Destroyer", par01, loc01));
-			sRepository.save(new Ship("Submarine", par01, loc02));
-			sRepository.save(new Ship("Patrol Boat", par01, loc03));
-			sRepository.save(new Ship("Destroyer", par02, loc04));
-			sRepository.save(new Ship("Patrol Boat", par02, loc05));
-			sRepository.save(new Ship("Destroyer", par03, loc06));
-			sRepository.save(new Ship("Patrol Boat", par03, loc07));
-			sRepository.save(new Ship("Submarine", par04, loc08));
-			sRepository.save(new Ship("Patrol Boat", par04, loc09));
-			sRepository.save(new Ship("Destroyer", par05, loc10));
-			sRepository.save(new Ship("Patrol Boat", par05, loc11));
-			sRepository.save(new Ship("Submarine", par06, loc12));
-			sRepository.save(new Ship("Patrol Boat", par06, loc13));
-			sRepository.save(new Ship("Destroyer", par07, loc14));
-			sRepository.save(new Ship("Patrol Boat", par07, loc15));
-			sRepository.save(new Ship("Submarine", par08, loc16));
-			sRepository.save(new Ship("Patrol Boat", par08, loc17));
-			sRepository.save(new Ship("Destroyer", par09, loc18));
-			sRepository.save(new Ship("Patrol Boat", par09, loc19));
-			sRepository.save(new Ship("Submarine", par10, loc20));
-			sRepository.save(new Ship("Patrol Boat", par10, loc21));
-			sRepository.save(new Ship("Destroyer", par11, loc22));
-			sRepository.save(new Ship("Patrol Boat", par11, loc23));
-			sRepository.save(new Ship("Destroyer", par13, loc24));
-			sRepository.save(new Ship("Patrol Boat", par13, loc25));
-			sRepository.save(new Ship("Submarine", par14,loc26));
-			sRepository.save(new Ship("Patrol Boat", par14, loc27));
+			shRepository.save(new Ship("Destroyer", par01, loc01));
+			shRepository.save(new Ship("Submarine", par01, loc02));
+			shRepository.save(new Ship("Patrol Boat", par01, loc03));
+			shRepository.save(new Ship("Destroyer", par02, loc04));
+			shRepository.save(new Ship("Patrol Boat", par02, loc05));
+			shRepository.save(new Ship("Destroyer", par03, loc06));
+			shRepository.save(new Ship("Patrol Boat", par03, loc07));
+			shRepository.save(new Ship("Submarine", par04, loc08));
+			shRepository.save(new Ship("Patrol Boat", par04, loc09));
+			shRepository.save(new Ship("Destroyer", par05, loc10));
+			shRepository.save(new Ship("Patrol Boat", par05, loc11));
+			shRepository.save(new Ship("Submarine", par06, loc12));
+			shRepository.save(new Ship("Patrol Boat", par06, loc13));
+			shRepository.save(new Ship("Destroyer", par07, loc14));
+			shRepository.save(new Ship("Patrol Boat", par07, loc15));
+			shRepository.save(new Ship("Submarine", par08, loc16));
+			shRepository.save(new Ship("Patrol Boat", par08, loc17));
+			shRepository.save(new Ship("Destroyer", par09, loc18));
+			shRepository.save(new Ship("Patrol Boat", par09, loc19));
+			shRepository.save(new Ship("Submarine", par10, loc20));
+			shRepository.save(new Ship("Patrol Boat", par10, loc21));
+			shRepository.save(new Ship("Destroyer", par11, loc22));
+			shRepository.save(new Ship("Patrol Boat", par11, loc23));
+			shRepository.save(new Ship("Destroyer", par13, loc24));
+			shRepository.save(new Ship("Patrol Boat", par13, loc25));
+			shRepository.save(new Ship("Submarine", par14,loc26));
+			shRepository.save(new Ship("Patrol Boat", par14, loc27));
+
+
+			Set<String> slv01 = new HashSet<>(Arrays.asList("B5", "C5", "F1"));
+			Set<String> slv02 = new HashSet<>(Arrays.asList("B4", "B5", "B6"));
+			Set<String> slv03 = new HashSet<>(Arrays.asList("F2", "D5"));
+			Set<String> slv04 = new HashSet<>(Arrays.asList("E1", "H3", "A2"));
+			Set<String> slv05 = new HashSet<>(Arrays.asList("A2", "A4", "G6"));
+			Set<String> slv06 = new HashSet<>(Arrays.asList("B5", "D5", "C7"));
+			Set<String> slv07 = new HashSet<>(Arrays.asList("A3", "H6"));
+			Set<String> slv08 = new HashSet<>(Arrays.asList("C5", "C6"));
+			Set<String> slv09 = new HashSet<>(Arrays.asList("G6", "H6", "A4"));
+			Set<String> slv10 = new HashSet<>(Arrays.asList("H1", "H2", "H3"));
+			Set<String> slv11 = new HashSet<>(Arrays.asList("A2", "A3", "D8"));
+			Set<String> slv12 = new HashSet<>(Arrays.asList("E1", "F2", "G3"));
+			Set<String> slv13 = new HashSet<>(Arrays.asList("A3", "A4", "F7"));
+			Set<String> slv14 = new HashSet<>(Arrays.asList("B5", "C6", "H1"));
+			Set<String> slv15 = new HashSet<>(Arrays.asList("A2", "G6", "H6"));
+			Set<String> slv16 = new HashSet<>(Arrays.asList("C5", "C7", "D5"));
+			Set<String> slv17 = new HashSet<>(Arrays.asList("A1", "A2", "A3"));
+			Set<String> slv18 = new HashSet<>(Arrays.asList("B5", "B6", "C7"));
+			Set<String> slv19 = new HashSet<>(Arrays.asList("G6", "G7", "G8"));
+			Set<String> slv20 = new HashSet<>(Arrays.asList("C6", "D6", "E6"));
+			Set<String> slv21 = new HashSet<>(Arrays.asList("H1", "H8"));
+			slRepository.save(new Salvo(par01, 1, slv01));
+			slRepository.save(new Salvo(par02, 1, slv02));
+			slRepository.save(new Salvo(par01, 2, slv03));
+			slRepository.save(new Salvo(par02, 2, slv04));
+			slRepository.save(new Salvo(par03, 1, slv05));
+			slRepository.save(new Salvo(par04, 1, slv06));
+			slRepository.save(new Salvo(par03, 2, slv07));
+			slRepository.save(new Salvo(par04, 2, slv08));
+			slRepository.save(new Salvo(par05, 1, slv09));
+			slRepository.save(new Salvo(par06, 1, slv10));
+			slRepository.save(new Salvo(par05, 2, slv11));
+			slRepository.save(new Salvo(par06, 2, slv12));
+			slRepository.save(new Salvo(par07, 1, slv13));
+			slRepository.save(new Salvo(par08, 1, slv14));
+			slRepository.save(new Salvo(par07, 2, slv15));
+			slRepository.save(new Salvo(par08, 2, slv16));
+			slRepository.save(new Salvo(par09, 1, slv17));
+			slRepository.save(new Salvo(par10, 1, slv18));
+			slRepository.save(new Salvo(par09, 2, slv19));
+			slRepository.save(new Salvo(par10, 2, slv20));
+			slRepository.save(new Salvo(par10, 3, slv21));
 
 		};
 	}

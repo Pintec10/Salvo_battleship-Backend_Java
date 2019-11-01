@@ -26,7 +26,10 @@ public class GamePlayer {
     private Game game;
 
     @OneToMany(mappedBy="gamePlayer")
-    private Set<Ship> boatFleet = new HashSet<Ship>();
+    private Set<Ship> boatFleet = new HashSet<>();
+
+    @OneToMany(mappedBy="gamePlayer")
+    private Set<Salvo> firedSalvoes = new LinkedHashSet<>();
 
     //constructors
     public GamePlayer() {}
@@ -52,6 +55,7 @@ public class GamePlayer {
     }
     public Long getId() { return id;}
     public Set<Ship> getBoatFleet() { return boatFleet;}
+    public Set<Salvo> getFiredSalvoes() { return firedSalvoes;}
 
     public void setJoinGameDate(Date date){
         this.joinGameDate = date;
