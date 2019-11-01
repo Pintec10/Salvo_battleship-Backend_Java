@@ -58,17 +58,57 @@ public class SalvoController {
         GamePlayer currentGamePlayer = gprepo.findById(gamePlayerID).orElse(null);
         Game currentGame = currentGamePlayer.getGame();
         Map<String, Object> gameView = new LinkedHashMap<>();
+        //game and player info
         gameView.putAll(gameMapper(currentGame));
 
+        //ship info
         List<Object> shipView = currentGamePlayer.getBoatFleet().stream()
                 .map(item -> shipMapper(item)).collect(Collectors.toList());
         gameView.put("ships", shipView);
 
 
+        //salvo info
+        Set<Object> salvoView = currentGamePlayer.getGame().getParticipationsPerGame()
+                .stream()
+                .map(oneGamePlayer -> GPStreamerForSalvo(oneGamePlayer))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
+        
+        gameView.put("salvoes", salvoView);
+        return gameView;
+    }
 
-        //Set<Object> salvoView = new HashSet<>();
 
-        Set<GamePlayer> bothGamePlayers = currentGamePlayer.getGame().getParticipationsPerGame();
+    private List<Object> GPStreamerForSalvo(GamePlayer oneGamePlayer) {
+        List<Object> output = firedSalvoesStreamer(oneGamePlayer.getFiredSalvoes());
+        return output;
+    }
+
+    private List<Object> firedSalvoesStreamer(Set<Salvo> salvoesList) {
+        return salvoesList.stream()
+                .map(oneSalvo -> salvoMapper(oneSalvo))
+                .collect(Collectors.toList());
+    }
+
+    private Map<String, Object> salvoMapper(Salvo oneSalvo){
+        Map <String, Object> output = new LinkedHashMap<>();
+        output.put("player", oneSalvo.getGamePlayer().getPlayer().getId());
+        output.put("turn", oneSalvo.getTurn());
+        output.put("locations", oneSalvo.getLocations());
+        return output;
+    }
+
+
+    private Map<String, Object> shipMapper(Ship oneShip) {
+        Map <String, Object> output = new LinkedHashMap<>();
+        output.put("type", oneShip.getType());
+        output.put("location", oneShip.getLocations());
+        return output;
+    }
+
+
+    /*
+    Set<GamePlayer> bothGamePlayers = currentGamePlayer.getGame().getParticipationsPerGame();
         //Set<Set> bothSalvoLists = bothGamePlayers.stream().map(oneGP -> oneGP.getFiredSalvoes()).collect(Collectors.toSet());
         //bothSalvoLists.stream().map(oneSalvoList -> oneSalvoList.stream().map(oneSalvo.get))
 
@@ -77,9 +117,7 @@ public class SalvoController {
 
     //salvoView.add(salvoMapper(ONESALVO));
 
-        gameView.put("salvoes", salvoView);
-        return gameView;
-    }
+
 
     Map<String, Object> mapGpForSalvo(GamePlayer oneGp) {
         Map<String, Object> output = new HashMap<>();
@@ -91,21 +129,7 @@ public class SalvoController {
     public List<Object> getAllFiredSalvoes(Set<Salvo> salvoList) {
         return salvoList.stream().map(oneSalvo -> salvoMapper(oneSalvo)).collect(Collectors.toList());
     }
-
-    private Map<String, Object> salvoMapper(Salvo oneSalvo){
-        Map <String, Object> output = new LinkedHashMap<>();
-        output.put("player", oneSalvo.getGamePlayer().getPlayer());
-        output.put("turn", oneSalvo.getTurn());
-        //output.put("locations", oneSalvo.getLocations());
-        return output;
-    }
-
-    private Map<String, Object> shipMapper(Ship oneShip) {
-        Map <String, Object> output = new LinkedHashMap<>();
-        output.put("type", oneShip.getType());
-        output.put("location", oneShip.getLocations());
-        return output;
-    }
+     */
 
 
 }
