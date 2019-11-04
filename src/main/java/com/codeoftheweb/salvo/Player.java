@@ -19,6 +19,9 @@ public class Player {
     @OneToMany(mappedBy="player")
     private Set<GamePlayer> participationsPerPlayer = new HashSet<>();
 
+    @OneToMany(mappedBy="player")
+    private Set<Score> scoresPerPlayer = new HashSet();
+
 
     //constructors
     public Player(){};

@@ -15,8 +15,10 @@ public class SalvoApplication {
 	}
 
 	@Bean
-	public CommandLineRunner initParticipationData(PlayerRepository pRepository, GameRepository gmRepository,
-			GamePlayerRepository gpRepository, ShipRepository shRepository, SalvoRepository slRepository) {
+	public CommandLineRunner initParticipationData(PlayerRepository pRepository,
+			GameRepository gmRepository, GamePlayerRepository gpRepository,
+			ShipRepository shRepository, SalvoRepository slRepository,
+			ScoreRepository scRepository) {
 		return (args) -> {
 			Player pla1 = new Player("j.bauer@ctu.gov");
 			Player pla2 = new Player("c.obrian@ctu.gov");
@@ -186,6 +188,21 @@ public class SalvoApplication {
 			slRepository.save(new Salvo(par09, 2, slv19));
 			slRepository.save(new Salvo(par10, 2, slv20));
 			slRepository.save(new Salvo(par10, 3, slv21));
+
+
+			Date d1end = Date.from(d1.toInstant().plusSeconds(1800));
+			Date d2end = Date.from(d2.toInstant().plusSeconds(1800));
+			Date d3end = Date.from(d3.toInstant().plusSeconds(1800));
+			Date d4end = Date.from(d4.toInstant().plusSeconds(1800));
+
+			scRepository.save(new Score(gam1, pla1, 1, d1end));
+			scRepository.save(new Score(gam1, pla2, 0, d1end));
+			scRepository.save(new Score(gam2, pla1, 0.5, d2end));
+			scRepository.save(new Score(gam2, pla2, 0.5, d2end));
+			scRepository.save(new Score(gam3, pla2, 1, d3end));
+			scRepository.save(new Score(gam3, pla4, 0, d3end));
+			scRepository.save(new Score(gam4, pla2, 0.5, d4end));
+			scRepository.save(new Score(gam4, pla1, 0.5, d4end));
 
 		};
 	}

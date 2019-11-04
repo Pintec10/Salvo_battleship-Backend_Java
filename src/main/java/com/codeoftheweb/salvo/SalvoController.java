@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -66,14 +67,15 @@ public class SalvoController {
                 .map(item -> shipMapper(item)).collect(Collectors.toList());
         gameView.put("ships", shipView);
 
-
         //salvo info
         Set<Object> salvoView = currentGamePlayer.getGame().getParticipationsPerGame()
                 .stream()
+                //.sorted((o1, o2) -> o1.getId().compareTo(o2.getId()))
                 .map(oneGamePlayer -> GPStreamerForSalvo(oneGamePlayer))
                 .flatMap(Collection::stream)
+
                 .collect(Collectors.toSet());
-        
+
         gameView.put("salvoes", salvoView);
         return gameView;
     }
@@ -86,13 +88,14 @@ public class SalvoController {
 
     private List<Object> firedSalvoesStreamer(Set<Salvo> salvoesList) {
         return salvoesList.stream()
+                //.sorted((o1, o2) -> o1.getTurn().compareTo(o2.getTurn()))
                 .map(oneSalvo -> salvoMapper(oneSalvo))
                 .collect(Collectors.toList());
     }
 
     private Map<String, Object> salvoMapper(Salvo oneSalvo){
         Map <String, Object> output = new LinkedHashMap<>();
-        output.put("player", oneSalvo.getGamePlayer().getPlayer().getId());
+        output.put("gamePlayer", oneSalvo.getGamePlayer().getId());
         output.put("turn", oneSalvo.getTurn());
         output.put("locations", oneSalvo.getLocations());
         return output;

@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 
 @Entity
 public class Game {
+
+    //fields
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
     @GenericGenerator(name = "native", strategy = "native")
@@ -19,6 +21,9 @@ public class Game {
 
     @OneToMany(mappedBy="game")
     private Set<GamePlayer> participationsPerGame = new HashSet<>();
+
+    @OneToMany(mappedBy="game")
+    private Set<Score> scoresPerGame = new HashSet<>();
 
     //constructors
     public Game(){};
