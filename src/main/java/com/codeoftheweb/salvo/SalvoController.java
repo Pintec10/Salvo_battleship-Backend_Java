@@ -34,17 +34,16 @@ public class SalvoController {
 
     private Map<String, Object> playerMapperForScores(Player onePlayer) {
         Map<String, Object> output = new LinkedHashMap<>();
-        output.put("player id", onePlayer.getId());
-        output.put("player name", onePlayer.getUserName());
+        output.put("player_id", onePlayer.getId());
+        output.put("player_name", onePlayer.getUserName());
         output.put("scores_list", onePlayer.getScoreValueList());
-        output.put("total score", onePlayer.getTotalScore());
+        output.put("total_score", onePlayer.getTotalScore());
         output.put("count_won", onePlayer.getScoreOccurrences(1));
         output.put("count_lost", onePlayer.getScoreOccurrences(0));
         output.put("count_draw", onePlayer.getScoreOccurrences(0.5));
         return output;
     }
 
-    //private int get
 
     private Map<String, Object> gameMapper(Game game) {
     Map<String, Object> output = new LinkedHashMap<>();
