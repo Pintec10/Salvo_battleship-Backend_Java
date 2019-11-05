@@ -33,27 +33,47 @@ public class Player {
     public String getUserName() {
         return userName;
     }
-
     public Long getId() {
         return id;
     }
-
     public Set<GamePlayer> getParticipationsPerPlayer() {
-        return participationsPerPlayer;
+        return participationsPerPlayer; }
+    public Set<Game> getGames() {
+        return this.getParticipationsPerPlayer().stream()
+                .map(gp -> gp.getGame()).collect(Collectors.toSet()); }
+    public Set<Score> getScoresPerPlayer() { return scoresPerPlayer; }
+    public Score getOneScore(Game game) {
+        return this.getScoresPerPlayer().stream()
+                .filter(oneScore -> oneScore.getGame().getId().equals(game.getId()))
+                //.findFirst().orElse(null);
+                .findFirst().orElse(null);
+    }
+    public double[] getScoreValueList() {
+        if (this.getScoresPerPlayer() != null) {
+        return this.getScoresPerPlayer().stream()
+                .mapToDouble(oneScore -> oneScore.getScoreValue()).toArray();
+        } else return new double[]{};
+    }
+
+    public double getTotalScore() {
+        return this.getScoresPerPlayer().stream()
+                .collect(Collectors.summingDouble(Score::getScoreValue));
+    }
+
+    public long getScoreOccurrences(double score) {
+        return this.getScoresPerPlayer().stream()
+                .filter(oneScore -> oneScore.getScoreValue() == score)
+                .count();
     }
 
     public void setUserName(String userName) {
         this.userName = userName;
     }
-
     public void addParticipationPerPlayer(GamePlayer participation) {
         participationsPerPlayer.add(participation);
         participation.setPlayer(this);
     }
 
-    public Set<Game> getGames() {
-        return this.getParticipationsPerPlayer().stream().map(gp -> gp.getGame()).collect(Collectors.toSet());
-    }
 
     @Override
     public String toString() {

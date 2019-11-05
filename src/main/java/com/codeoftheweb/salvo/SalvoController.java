@@ -5,7 +5,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -22,10 +21,30 @@ public class SalvoController {
     @Autowired
     private GamePlayerRepository gprepo;
 
+    @Autowired
+    private PlayerRepository plrepo;
+
     @RequestMapping("/games")
-    public List<Object> getAllGamesInfo() {
-        return gamerepo.findAll().stream().map(oneGame -> gameMapper(oneGame)).collect(Collectors.toList());
+    public Map<String, Object> getAllGamesInfo() {
+        Map<String, Object> output = new LinkedHashMap<>();
+        output.put ("games_info", gamerepo.findAll().stream().map(oneGame -> gameMapper(oneGame)).collect(Collectors.toList()));
+        output.put ("scores_info", plrepo.findAll().stream().map(onePlayer -> playerMapperForScores(onePlayer)).collect(Collectors.toList()));
+        return output;
     }
+
+    private Map<String, Object> playerMapperForScores(Player onePlayer) {
+        Map<String, Object> output = new LinkedHashMap<>();
+        output.put("player id", onePlayer.getId());
+        output.put("player name", onePlayer.getUserName());
+        output.put("scores_list", onePlayer.getScoreValueList());
+        output.put("total score", onePlayer.getTotalScore());
+        output.put("count_won", onePlayer.getScoreOccurrences(1));
+        output.put("count_lost", onePlayer.getScoreOccurrences(0));
+        output.put("count_draw", onePlayer.getScoreOccurrences(0.5));
+        return output;
+    }
+
+    //private int get
 
     private Map<String, Object> gameMapper(Game game) {
     Map<String, Object> output = new LinkedHashMap<>();
@@ -43,6 +62,9 @@ public class SalvoController {
         Map<String, Object> output = new LinkedHashMap<>();
         output.put("id", oneGamePlayer.getId());
         output.put("player", playerMapper(oneGamePlayer.getPlayer()) );
+       if (oneGamePlayer.getScore() != null) {
+           output.put("score", oneGamePlayer.getScore().getScoreValue());
+       } else output.put("score", null);
         return output;
     }
 
@@ -70,10 +92,8 @@ public class SalvoController {
         //salvo info
         Set<Object> salvoView = currentGamePlayer.getGame().getParticipationsPerGame()
                 .stream()
-                //.sorted((o1, o2) -> o1.getId().compareTo(o2.getId()))
                 .map(oneGamePlayer -> GPStreamerForSalvo(oneGamePlayer))
                 .flatMap(Collection::stream)
-
                 .collect(Collectors.toSet());
 
         gameView.put("salvoes", salvoView);
@@ -88,7 +108,6 @@ public class SalvoController {
 
     private List<Object> firedSalvoesStreamer(Set<Salvo> salvoesList) {
         return salvoesList.stream()
-                //.sorted((o1, o2) -> o1.getTurn().compareTo(o2.getTurn()))
                 .map(oneSalvo -> salvoMapper(oneSalvo))
                 .collect(Collectors.toList());
     }

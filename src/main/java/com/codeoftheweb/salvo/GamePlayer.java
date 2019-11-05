@@ -56,6 +56,9 @@ public class GamePlayer {
     public Long getId() { return id;}
     public Set<Ship> getBoatFleet() { return boatFleet;}
     public Set<Salvo> getFiredSalvoes() { return firedSalvoes;}
+    public Score getScore() { return this.getPlayer().getScoresPerPlayer().stream()
+            .filter(oneScore -> oneScore.getGame().equals(this.getGame()))
+            .findFirst().orElse(null);}
 
     public void setJoinGameDate(Date date){
         this.joinGameDate = date;

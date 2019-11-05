@@ -22,17 +22,17 @@ public class Score {
     @JoinColumn(name="player_id")
     private Player player;
 
-    private double score;
+    private double scoreValue;
 
     private Date finishDate;
 
 
     //constructors
     public Score(){};
-    public Score(Game game, Player player, double score, Date finishDate) {
+    public Score(Game game, Player player, double scoreValue, Date finishDate) {
         this.game = game;
         this.player = player;
-        this.score = score;
+        this.scoreValue = scoreValue;
         this.finishDate = finishDate;
     }
 
@@ -42,12 +42,12 @@ public class Score {
     public Long getId() {return id;}
     public Game getGame() {return game;}
     public Player getPlayer() {return player;}
-    public double getScore() {return score;}
+    public double getScoreValue() {return scoreValue;}
     public Date getFinishDate() {return finishDate;}
 
     public void setGame(Game game) {this.game = game;}
     public void setPlayer(Player player) {this.player = player;}
-    public void setScore(double score) {this.score = score;}
+    public void setScoreValue(double scoreValue) {this.scoreValue = scoreValue;}
     public void setFinishDate(Date finishDate) {this.finishDate = finishDate;}
 
     @Override
