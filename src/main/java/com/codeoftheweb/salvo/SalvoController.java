@@ -41,6 +41,7 @@ public class SalvoController {
         output.put("count_won", onePlayer.getScoreOccurrences(1));
         output.put("count_lost", onePlayer.getScoreOccurrences(0));
         output.put("count_draw", onePlayer.getScoreOccurrences(0.5));
+        output.put("count_played", onePlayer.getPlayedGames());
         return output;
     }
 

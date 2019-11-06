@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 @Entity
 public class Player {
 
+    //fields
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
     @GenericGenerator(name = "native", strategy = "native")
@@ -22,25 +23,36 @@ public class Player {
     @OneToMany(mappedBy="player")
     private Set<Score> scoresPerPlayer = new HashSet();
 
+    private String password;
+
 
     //constructors
     public Player(){};
     public Player(String userName) {
         this.userName = userName;
     }
+    public Player(String userName, String password) {
+        this.userName = userName;
+        this.password = password;
+    }
+
 
     //methods
     public String getUserName() {
         return userName;
     }
+
     public Long getId() {
         return id;
     }
+
     public Set<GamePlayer> getParticipationsPerPlayer() {
         return participationsPerPlayer; }
+
     public Set<Game> getGames() {
         return this.getParticipationsPerPlayer().stream()
                 .map(gp -> gp.getGame()).collect(Collectors.toSet()); }
+
     public Set<Score> getScoresPerPlayer() { return scoresPerPlayer; }
     public Score getOneScore(Game game) {
         return this.getScoresPerPlayer().stream()
@@ -66,12 +78,25 @@ public class Player {
                 .count();
     }
 
+    public long getPlayedGames() {
+        return this.getScoresPerPlayer().stream().count();
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
     public void setUserName(String userName) {
         this.userName = userName;
     }
+
     public void addParticipationPerPlayer(GamePlayer participation) {
         participationsPerPlayer.add(participation);
         participation.setPlayer(this);
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
 
