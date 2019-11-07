@@ -4,8 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.security.SecurityProperties;
-import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -15,9 +13,14 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.WebAttributes;
+import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.util.*;
 
 @SpringBootApplication
@@ -29,15 +32,20 @@ public class SalvoApplication {
 	}
 
 	@Bean
+	public PasswordEncoder passwordEncoder() {
+		return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+	}
+
+	@Bean
 	public CommandLineRunner initParticipationData(PlayerRepository pRepository,
 			GameRepository gmRepository, GamePlayerRepository gpRepository,
 			ShipRepository shRepository, SalvoRepository slRepository,
 			ScoreRepository scRepository) {
 		return (args) -> {
-			Player pla1 = new Player("j.bauer@ctu.gov", "24");
-			Player pla2 = new Player("c.obrian@ctu.gov", "42");
-			Player pla3 = new Player("kim_bauer@gmail.com", "kb");
-			Player pla4 = new Player("t.almeida@ctu.gov", "mole");
+			Player pla1 = new Player("j.bauer@ctu.gov", passwordEncoder().encode("24"));
+			Player pla2 = new Player("c.obrian@ctu.gov", passwordEncoder().encode("42"));
+			Player pla3 = new Player("kim_bauer@gmail.com", passwordEncoder().encode("kb"));
+			Player pla4 = new Player("t.almeida@ctu.gov", passwordEncoder().encode("mole"));
 			pRepository.save(pla1);
 			pRepository.save(pla2);
 			pRepository.save(pla3);
@@ -249,15 +257,36 @@ class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
-	http.authorizeRequests()
-			.antMatchers("api/games", "/", "/home").permitAll()
-			.anyRequest().authenticated()
-			.and()
-			.formLogin();
+		http.authorizeRequests()
+				.antMatchers("/api/games", "/home", "/api/login").permitAll()
+				.anyRequest().fullyAuthenticated();
 
-	http.formLogin()
-			.loginPage("/api/login");
+		http.formLogin()
+				.loginPage("/api/login");
 
-	http.logout().logoutUrl("/api/logout");
+		http.logout().logoutUrl("/api/logout");
+
+		http.csrf().disable();
+
+		// if user is not authenticated, just send an authentication failure response
+		http.exceptionHandling().authenticationEntryPoint((req, res, exc) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED));
+
+		// if login is successful, just clear the flags asking for authentication
+		http.formLogin().successHandler((req, res, auth) -> clearAuthenticationAttributes(req));
+
+		// if login fails, just send an authentication failure response
+		http.formLogin().failureHandler((req, res, exc) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED));
+
+		// if logout is successful, just send a success response
+		http.logout().logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler());
+
+	}
+
+	private void clearAuthenticationAttributes(HttpServletRequest request) {
+		HttpSession session = request.getSession(false);
+		if (session != null) {
+			session.removeAttribute(WebAttributes.AUTHENTICATION_EXCEPTION);
+		}
 	}
 }
+

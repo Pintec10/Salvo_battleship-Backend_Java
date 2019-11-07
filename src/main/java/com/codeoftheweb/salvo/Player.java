@@ -57,7 +57,6 @@ public class Player {
     public Score getOneScore(Game game) {
         return this.getScoresPerPlayer().stream()
                 .filter(oneScore -> oneScore.getGame().getId().equals(game.getId()))
-                //.findFirst().orElse(null);
                 .findFirst().orElse(null);
     }
     public double[] getScoreValueList() {
