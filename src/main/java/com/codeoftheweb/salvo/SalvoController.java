@@ -1,6 +1,16 @@
 package com.codeoftheweb.salvo;
 
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMessage;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,6 +24,10 @@ import java.util.stream.Collectors;
 public class SalvoController {
 
 
+    @Bean
+    public PasswordEncoder newPlayerPasswordEncoder() {
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+    }
 
     @Autowired
     private GameRepository gamerepo;
@@ -24,12 +38,33 @@ public class SalvoController {
     @Autowired
     private PlayerRepository plrepo;
 
+
+
+    // ---------- COMPLETE GAMES LIST INFO CODE ----------
+
     @RequestMapping("/games")
-    public Map<String, Object> getAllGamesInfo() {
+    public Map<String, Object> getAllGamesInfo(Authentication authentication) {
         Map<String, Object> output = new LinkedHashMap<>();
+        output.put("current_user", authenticatedUserMapper(authentication));
         output.put ("games_info", gamerepo.findAll().stream().map(oneGame -> gameMapper(oneGame)).collect(Collectors.toList()));
         output.put ("scores_info", plrepo.findAll().stream().map(onePlayer -> playerMapperForScores(onePlayer)).collect(Collectors.toList()));
         return output;
+    }
+
+    public Map<String, Object> authenticatedUserMapper(Authentication authentication) {
+        Map<String, Object> output = new LinkedHashMap<>();
+        if (isGuest(authentication) == false){
+            output.put("id", plrepo.findByUserName(authentication.getName()).getId());
+            output.put("name", plrepo.findByUserName(authentication.getName()).getUserName());
+        } else {
+            output.put("id", null);
+            output.put("name", null);
+        }
+        return output;
+    }
+
+    private boolean isGuest(Authentication authentication) {
+        return authentication == null || authentication instanceof AnonymousAuthenticationToken;
     }
 
     private Map<String, Object> playerMapperForScores(Player onePlayer) {
@@ -75,6 +110,10 @@ public class SalvoController {
         return output;
     }
 
+
+
+
+    // ---------- GAME VIEW CODE ----------
 
     @RequestMapping("game_view/{gamePlayerID}")
     public Map<String, Object> getGameViewInfo(@PathVariable Long gamePlayerID) {
@@ -129,29 +168,38 @@ public class SalvoController {
     }
 
 
-    /*
-    Set<GamePlayer> bothGamePlayers = currentGamePlayer.getGame().getParticipationsPerGame();
-        //Set<Set> bothSalvoLists = bothGamePlayers.stream().map(oneGP -> oneGP.getFiredSalvoes()).collect(Collectors.toSet());
-        //bothSalvoLists.stream().map(oneSalvoList -> oneSalvoList.stream().map(oneSalvo.get))
 
-        List<Object> salvoView = bothGamePlayers.stream().map(oneGP -> mapGpForSalvo(oneGP)).collect(Collectors.toList());
+    // ---------- USER CREATION ----------
 
+    @RequestMapping("/players")
+    public ResponseEntity<Map<String, Object>> createUser(String username, String password) {
+        username = username.trim();
 
-    //salvoView.add(salvoMapper(ONESALVO));
+        if (username.isEmpty()) {
+            return new ResponseEntity<>(makeMap("error", "No email given"), HttpStatus.FORBIDDEN);
+        }
 
+        if (username.contains(" ")) {
+            return new ResponseEntity<>(makeMap("error", "No white spaces allowed"), HttpStatus.FORBIDDEN);
+        }
 
+        if (!username.contains("@")) {
+            return new ResponseEntity<>(makeMap("error", "Email must contain a '@' sign"), HttpStatus.FORBIDDEN);
+        }
 
-    Map<String, Object> mapGpForSalvo(GamePlayer oneGp) {
+        Player existingPlayer = plrepo.findByUserName(username);
+        if (existingPlayer != null) {
+            return new ResponseEntity<>(makeMap("error", "Email already in use"), HttpStatus.FORBIDDEN);
+        }
+
+        Player newUser = new Player(username, newPlayerPasswordEncoder().encode(password));
+        plrepo.save(newUser);
+        return new ResponseEntity<>(makeMap("username", newUser.getUserName()), HttpStatus.CREATED);
+    }
+
+    private Map<String, Object> makeMap(String key, String value) {
         Map<String, Object> output = new HashMap<>();
-        output.put("id", oneGp.getId()); //to remove
-        output.put("salvoes", getAllFiredSalvoes(oneGp.getFiredSalvoes()) );
+        output.put(key, value);
         return output;
     }
-
-    public List<Object> getAllFiredSalvoes(Set<Salvo> salvoList) {
-        return salvoList.stream().map(oneSalvo -> salvoMapper(oneSalvo)).collect(Collectors.toList());
-    }
-     */
-
-
 }
