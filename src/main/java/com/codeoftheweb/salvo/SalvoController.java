@@ -11,9 +11,7 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -171,9 +169,10 @@ public class SalvoController {
 
     // ---------- USER CREATION ----------
 
-    @RequestMapping("/players")
-    public ResponseEntity<Map<String, Object>> createUser(String username, String password) {
-        username = username.trim();
+    @RequestMapping(value="/players", method= RequestMethod.POST)
+    public ResponseEntity<Map<String, Object>> createUser(@RequestBody Player player) {
+        String username = player.getUserName().trim();
+        String password = player.getPassword();
 
         if (username.isEmpty()) {
             return new ResponseEntity<>(makeMap("error", "No email given"), HttpStatus.FORBIDDEN);
