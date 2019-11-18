@@ -37,17 +37,7 @@ public class SalvoController {
     private PlayerRepository plrepo;
 
 
-
-    // ---------- COMPLETE GAMES LIST INFO CODE ----------
-
-    @RequestMapping("/games")
-    public Map<String, Object> getAllGamesInfo(Authentication authentication) {
-        Map<String, Object> output = new LinkedHashMap<>();
-        output.put("current_user", authenticatedUserMapper(authentication));
-        output.put ("games_info", gamerepo.findAll().stream().map(oneGame -> gameMapper(oneGame)).collect(Collectors.toList()));
-        output.put ("scores_info", plrepo.findAll().stream().map(onePlayer -> playerMapperForScores(onePlayer)).collect(Collectors.toList()));
-        return output;
-    }
+    // ---------- CURRENT AUTHENTICATED USER METHODS ----------
 
     public Map<String, Object> authenticatedUserMapper(Authentication authentication) {
         Map<String, Object> output = new LinkedHashMap<>();
@@ -65,6 +55,19 @@ public class SalvoController {
         return authentication == null || authentication instanceof AnonymousAuthenticationToken;
     }
 
+
+
+    // ---------- COMPLETE GAMES LIST INFO ----------
+
+    @RequestMapping("/games")
+    public Map<String, Object> getAllGamesInfo(Authentication authentication) {
+        Map<String, Object> output = new LinkedHashMap<>();
+        output.put("current_user", authenticatedUserMapper(authentication));
+        output.put ("games_info", gamerepo.findAll().stream().map(oneGame -> gameMapper(oneGame)).collect(Collectors.toList()));
+        output.put ("scores_info", plrepo.findAll().stream().map(onePlayer -> playerMapperForScores(onePlayer)).collect(Collectors.toList()));
+        return output;
+    }
+
     private Map<String, Object> playerMapperForScores(Player onePlayer) {
         Map<String, Object> output = new LinkedHashMap<>();
         output.put("player_id", onePlayer.getId());
@@ -77,7 +80,6 @@ public class SalvoController {
         output.put("count_played", onePlayer.getPlayedGames());
         return output;
     }
-
 
     private Map<String, Object> gameMapper(Game game) {
     Map<String, Object> output = new LinkedHashMap<>();
@@ -110,14 +112,14 @@ public class SalvoController {
 
 
 
-
     // ---------- GAME VIEW CODE ----------
 
     @RequestMapping("game_view/{gamePlayerID}")
-    public Map<String, Object> getGameViewInfo(@PathVariable Long gamePlayerID) {
+    public ResponseEntity<Map<String, Object>>  getGameViewInfo(@PathVariable Long gamePlayerID, Authentication authentication) {
         GamePlayer currentGamePlayer = gprepo.findById(gamePlayerID).orElse(null);
         Game currentGame = currentGamePlayer.getGame();
         Map<String, Object> gameView = new LinkedHashMap<>();
+
         //game and player info
         gameView.putAll(gameMapper(currentGame));
 
@@ -134,9 +136,16 @@ public class SalvoController {
                 .collect(Collectors.toSet());
 
         gameView.put("salvoes", salvoView);
-        return gameView;
-    }
 
+        //checking if Gp in request URL is actually the current authenticated player
+        if (currentGamePlayer != null &&
+                authenticatedUserMapper(authentication).get("id") == currentGamePlayer.getPlayer().getId()) {
+            return new ResponseEntity<>(gameView, HttpStatus.OK);
+
+        } else {
+            return new ResponseEntity<Map<String, Object>>(makeMap("error", "nice try!"), HttpStatus.UNAUTHORIZED);
+        }
+    }
 
     private List<Object> GPStreamerForSalvo(GamePlayer oneGamePlayer) {
         List<Object> output = firedSalvoesStreamer(oneGamePlayer.getFiredSalvoes());
