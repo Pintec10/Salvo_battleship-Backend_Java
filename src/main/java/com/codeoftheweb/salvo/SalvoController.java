@@ -59,7 +59,7 @@ public class SalvoController {
 
     // ---------- COMPLETE GAMES LIST INFO ----------
 
-    @RequestMapping("/games")
+    @RequestMapping(value="/games", method = RequestMethod.GET)
     public Map<String, Object> getAllGamesInfo(Authentication authentication) {
         Map<String, Object> output = new LinkedHashMap<>();
         output.put("current_user", authenticatedUserMapper(authentication));
@@ -143,7 +143,7 @@ public class SalvoController {
             return new ResponseEntity<>(gameView, HttpStatus.OK);
 
         } else {
-            return new ResponseEntity<Map<String, Object>>(makeMap("error", "nice try!"), HttpStatus.UNAUTHORIZED);
+            return new ResponseEntity<>(makeMap("error", "nice try!"), HttpStatus.UNAUTHORIZED);
         }
     }
 
@@ -176,7 +176,7 @@ public class SalvoController {
 
 
 
-    // ---------- USER CREATION ----------
+    // ---------- NEW USER CREATION ----------
 
     @RequestMapping(value="/players", method= RequestMethod.POST)
     public ResponseEntity<Map<String, Object>> createUser(@RequestBody Player player) {
@@ -210,4 +210,24 @@ public class SalvoController {
         output.put(key, value);
         return output;
     }
+
+
+    // NEW GAME CREATION
+
+    @RequestMapping(value="/games", method= RequestMethod.POST)
+    public ResponseEntity<Map<String, Object>> createGame(Authentication authentication) {
+        if (authenticatedUserMapper(authentication).get("id") != null) {
+            Date now = new Date();
+            Game newGame = new Game(now);
+            Player currentPlayer = plrepo.findByUserName(authentication.getName());
+            GamePlayer newGp = new GamePlayer(now, currentPlayer, newGame);
+            gamerepo.save(newGame);
+            gprepo.save(newGp);
+            return new ResponseEntity<>(makeMap("gpid", newGp.getId().toString()), HttpStatus.CREATED);
+        } else {
+            return new ResponseEntity<>(makeMap("error", "no logged in user"), HttpStatus.UNAUTHORIZED);
+        }
+    }
 }
+
+//gamerepo, gprepo, plrepo

@@ -60,9 +60,7 @@ public class GamePlayer {
             .filter(oneScore -> oneScore.getGame().equals(this.getGame()))
             .findFirst().orElse(null);}
 
-    public void setJoinGameDate(Date date){
-        this.joinGameDate = date;
-    }
+    public void setJoinGameDate(Date date){ this.joinGameDate = date; }
     public void setPlayer(Player player) {
         this.player = player;
     }
