@@ -90,7 +90,7 @@ public class SalvoController {
     }
 
     private List<Object> getAllGamePlayers(Set<GamePlayer> gpList) {
-        return gpList.stream().map(oneItem -> gamePlayerMapper(oneItem)).collect(Collectors.toList());
+        return gpList.stream().sorted(Comparator.comparing(GamePlayer::getId)).map(oneItem -> gamePlayerMapper(oneItem)).collect(Collectors.toList());
     }
 
     private Map<String, Object> gamePlayerMapper (GamePlayer oneGamePlayer) {
@@ -214,7 +214,7 @@ public class SalvoController {
 
     // NEW GAME CREATION
 
-    @RequestMapping(value="/games", method= RequestMethod.POST)
+    @RequestMapping(value="/games", method = RequestMethod.POST)
     public ResponseEntity<Map<String, Object>> createGame(Authentication authentication) {
         if (authenticatedUserMapper(authentication).get("id") != null) {
             Date now = new Date();
@@ -228,6 +228,27 @@ public class SalvoController {
             return new ResponseEntity<>(makeMap("error", "no logged in user"), HttpStatus.UNAUTHORIZED);
         }
     }
+
+
+    // JOIN AN EXISTING GAME
+
+    @RequestMapping(value="/game/{gameID}/players", method = RequestMethod.POST)
+    public ResponseEntity<Map<String, Object>> joinGame(@PathVariable Long gameID, Authentication authentication) {
+        Game requestedGame = gamerepo.findById(gameID).orElse(null);
+        if (authenticatedUserMapper(authentication).get("id") == null) {
+            return new ResponseEntity<>(makeMap("error", "No logged in user"), HttpStatus.UNAUTHORIZED);
+        } else if (requestedGame == null) {
+            return new ResponseEntity<>(makeMap("error", "The requested game does not exist"), HttpStatus.FORBIDDEN);
+        } else if (requestedGame.getParticipationsPerGame().size() > 1) {
+            return new ResponseEntity<>(makeMap("error", "This game is full"), HttpStatus.FORBIDDEN);
+        } else {
+            Date now = new Date();
+            Player currentPlayer = plrepo.findByUserName(authentication.getName());
+            GamePlayer newGp = new GamePlayer(now, currentPlayer, requestedGame);
+            gprepo.save(newGp);
+            return new ResponseEntity<>(makeMap("gpid", newGp.getId().toString()), HttpStatus.CREATED);
+        }
+    }
+
 }
 
-//gamerepo, gprepo, plrepo
