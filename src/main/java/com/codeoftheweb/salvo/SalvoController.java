@@ -36,6 +36,9 @@ public class SalvoController {
     @Autowired
     private PlayerRepository plrepo;
 
+    @Autowired
+    private ShipRepository shiprepo;
+
 
     // ---------- CURRENT AUTHENTICATED USER METHODS ----------
 
@@ -110,6 +113,29 @@ public class SalvoController {
         return output;
     }
 
+
+    // ---------- PLACE NEW SHIPS ----------
+    @RequestMapping(value="/games/players/{gamePlayerID}/ships", method = RequestMethod.POST)
+    public ResponseEntity<String> placeShips(@PathVariable Long gamePlayerID, @RequestBody List<Ship> shipList,
+                                                 Authentication authentication) {
+        GamePlayer currentGamePlayer = gprepo.findById(gamePlayerID).orElse(null);
+
+        if ((authenticatedUserMapper(authentication).get("id") == null) ||
+                (currentGamePlayer == null) ||
+                (authenticatedUserMapper(authentication).get("id") != currentGamePlayer.getPlayer().getId())) {
+            return new ResponseEntity<>("No valid user logged in ", HttpStatus.UNAUTHORIZED);
+        } else {
+            Set<Ship> boatFleet = currentGamePlayer.getBoatFleet();
+            if (boatFleet.size() != 0) {
+                return new ResponseEntity<>("Ships have been placed already!", HttpStatus.FORBIDDEN);
+            } else {
+                shipList.stream().forEach(oneShip -> {
+                    oneShip.setGamePlayer(currentGamePlayer);
+                    shiprepo.save(oneShip);});
+                return new ResponseEntity<>("ships successfully added", HttpStatus.CREATED);
+            }
+        }
+    }
 
 
     // ---------- GAME VIEW CODE ----------
