@@ -22,16 +22,16 @@ public class Ship {
     private GamePlayer gamePlayer;
 
     @ElementCollection
-    @Column(name="locations")
-    private List<String> locations = new ArrayList<>();
+    @Column(name="location")
+    private List<String> location = new ArrayList<>();
 
 
     //constructors
     public Ship(){};
-    public Ship(String type, GamePlayer gamePlayer, List<String> locations) {
+    public Ship(String type, GamePlayer gamePlayer, List<String> location) {
         this.type = type;
         this.gamePlayer = gamePlayer;
-        this.locations = locations;
+        this.location = location;
     }
 
 
@@ -39,7 +39,7 @@ public class Ship {
     public Long getId() { return id; }
     public String getType() { return type; }
     public GamePlayer getGamePlayer() { return gamePlayer; }
-    public List<String> getLocations() { return locations; }
+    public List<String> getLocation() { return location; }
 
     public void setType(String type) {
         this.type = type;
@@ -47,8 +47,8 @@ public class Ship {
     public void setGamePlayer(GamePlayer gamePlayer) {
         this.gamePlayer = gamePlayer;
     }
-    public void setLocations(List<String> locations) {
-        this.locations = locations;
+    public void setLocation(List<String> location) {
+        this.location = location;
     }
 
     @Override

@@ -3,8 +3,6 @@ package com.codeoftheweb.salvo;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMessage;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -196,7 +194,7 @@ public class SalvoController {
     private Map<String, Object> shipMapper(Ship oneShip) {
         Map <String, Object> output = new LinkedHashMap<>();
         output.put("type", oneShip.getType());
-        output.put("location", oneShip.getLocations());
+        output.put("location", oneShip.getLocation());
         return output;
     }
 
