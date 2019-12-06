@@ -37,6 +37,9 @@ public class SalvoController {
     @Autowired
     private ShipRepository shiprepo;
 
+    @Autowired
+    private SalvoRepository salvorepo;
+
 
     // ---------- CURRENT AUTHENTICATED USER METHODS ----------
 
@@ -133,6 +136,32 @@ public class SalvoController {
                 return new ResponseEntity<>("ships successfully added", HttpStatus.CREATED);
             }
         }
+    }
+
+
+    // ---------- PLACE NEW SALVOES ----------
+    @RequestMapping(value="/games/players/{gamePlayerID}/salvoes", method = RequestMethod.POST)
+    public ResponseEntity<String> placeSalvoes(@PathVariable Long gamePlayerID, @RequestBody Salvo newSalvo,
+                                             Authentication authentication) {
+        GamePlayer currentGamePlayer = gprepo.findById(gamePlayerID).orElse(null);
+
+        if ((authenticatedUserMapper(authentication).get("id") == null) ||
+                (currentGamePlayer == null) ||
+                (authenticatedUserMapper(authentication).get("id") != currentGamePlayer.getPlayer().getId())) {
+            return new ResponseEntity<>("No valid user logged in ", HttpStatus.UNAUTHORIZED);
+        } else {
+            Set<Salvo> previousSalvoes = currentGamePlayer.getFiredSalvoes();
+            if (previousSalvoes.stream().anyMatch
+                    (onePrevSalvo -> onePrevSalvo.getTurn() == newSalvo.getTurn())) {
+                return new ResponseEntity<>("Salvo already fired for that turn!", HttpStatus.FORBIDDEN);
+            }
+            else {
+                newSalvo.setGamePlayer(currentGamePlayer);
+                salvorepo.save(newSalvo);
+                return new ResponseEntity<>("Salvo successfully fired!", HttpStatus.CREATED);
+            }
+        }
+
     }
 
 
