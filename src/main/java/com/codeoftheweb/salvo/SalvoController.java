@@ -157,6 +157,7 @@ public class SalvoController {
             }
             else {
                 newSalvo.setGamePlayer(currentGamePlayer);
+                newSalvo.setTurn(5); //TO BE CHANGED LATER
                 salvorepo.save(newSalvo);
                 return new ResponseEntity<>("Salvo successfully fired!", HttpStatus.CREATED);
             }
@@ -187,8 +188,18 @@ public class SalvoController {
                 .map(oneGamePlayer -> GPStreamerForSalvo(oneGamePlayer))
                 .flatMap(Collection::stream)
                 .collect(Collectors.toSet());
-
         gameView.put("salvoes", salvoView);
+
+
+        //------------..............-------------------
+        //battle status info
+        Set<Object> battleStatusView = currentGamePlayer.getGame().getParticipationsPerGame()
+                .stream()
+                .map(oneGamePlayer -> GPMapperforBattleStatus(oneGamePlayer))
+                //TO FINISH!
+
+
+        //-----------**************-----------------
 
         //checking if Gp in request URL is actually the current authenticated player
         if (currentGamePlayer != null &&
@@ -199,6 +210,40 @@ public class SalvoController {
             return new ResponseEntity<>(makeMap("error", "nice try!"), HttpStatus.UNAUTHORIZED);
         }
     }
+
+    // ____________________________
+    private Map<String, Object> GPMapperforBattleStatus(GamePlayer oneGP) {
+        GamePlayer opponent = oneGP.getGame().getParticipationsPerGame().stream()
+                .filter(gp -> !gp.getId().equals(oneGP.getId()))
+                .findFirst().orElse(null);
+        Map<String, Object> output = new LinkedHashMap<>();
+        output.put("gamePlayer", oneGP.getId());
+        //output.put("hitsReceived", hitsReceivedCalculator(oneGP, opponent, true));
+        //output.put("missReceived", hitsReceivedCalculator(oneGP, false));
+        //output.put("fleetStatus", **TO DO**(oneGP));
+        return output;
+    }
+
+    private Set<String> hitsReceivedCalculator (GamePlayer oneGP, GamePlayer opponent,
+                                                Boolean gettingSuccessfulHits) {
+        Set<String> opponentShots = opponent.getFiredSalvoes().stream().map(oneSalvo -> oneSalvo.getLocations())
+                .flatMap(Collection::stream).collect(Collectors.toSet());
+        Set<String> ownerShipLocations = oneGP.getBoatFleet().stream().map(oneShip -> oneShip.getLocation())
+                .flatMap(Collection::stream).collect(Collectors.toSet());
+        Set<String> output;
+
+        if (gettingSuccessfulHits) {
+            output = opponentShots.stream().filter(ownerShipLocations::contains)
+                    .collect(Collectors.toSet());
+        } else {
+            output = opponentShots.stream().filter(oneShot -> !ownerShipLocations.contains(oneShot))
+                    .collect(Collectors.toSet());
+        }
+        return output;
+    }
+
+
+    //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     private List<Object> GPStreamerForSalvo(GamePlayer oneGamePlayer) {
         List<Object> output = firedSalvoesStreamer(oneGamePlayer.getFiredSalvoes());
