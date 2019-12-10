@@ -195,9 +195,10 @@ public class SalvoController {
         //battle status info
         Set<Object> battleStatusView = currentGamePlayer.getGame().getParticipationsPerGame()
                 .stream()
-                .map(oneGamePlayer -> GPMapperforBattleStatus(oneGamePlayer))
+                .map(oneGamePlayer -> GPMapperforBattleStatus(currentGamePlayer, oneGamePlayer))
+                .collect(Collectors.toSet());
                 //TO FINISH!
-
+        gameView.put("battleStatus", battleStatusView);
 
         //-----------**************-----------------
 
@@ -212,36 +213,66 @@ public class SalvoController {
     }
 
     // ____________________________
-    private Map<String, Object> GPMapperforBattleStatus(GamePlayer oneGP) {
+    private Map<String, Object> GPMapperforBattleStatus(GamePlayer viewer, GamePlayer oneGP) {
+        Set<String> ownerShipLocations = oneGP.getBoatFleet().stream().map(oneShip -> oneShip.getLocation())
+                .flatMap(Collection::stream).collect(Collectors.toSet());
         GamePlayer opponent = oneGP.getGame().getParticipationsPerGame().stream()
                 .filter(gp -> !gp.getId().equals(oneGP.getId()))
                 .findFirst().orElse(null);
+        Set<String> opponentShots;
+        if (opponent != null) {
+            opponentShots = opponent.getFiredSalvoes().stream().map(oneSalvo -> oneSalvo.getLocations())
+                    .flatMap(Collection::stream).collect(Collectors.toSet());
+        } else {opponentShots = null;}
+
         Map<String, Object> output = new LinkedHashMap<>();
         output.put("gamePlayer", oneGP.getId());
-        //output.put("hitsReceived", hitsReceivedCalculator(oneGP, opponent, true));
-        //output.put("missReceived", hitsReceivedCalculator(oneGP, false));
-        //output.put("fleetStatus", **TO DO**(oneGP));
+        output.put("hitsReceived", hitsReceivedCalculator(ownerShipLocations, opponentShots, true));
+        output.put("missReceived", hitsReceivedCalculator(ownerShipLocations, opponentShots,false));
+        output.put("fleetStatus", fleetStatusChecker(viewer, oneGP, opponentShots));
         return output;
     }
 
-    private Set<String> hitsReceivedCalculator (GamePlayer oneGP, GamePlayer opponent,
+
+    private Set<String> hitsReceivedCalculator (Set<String> ownerShipLocations, Set<String> opponentShots,
                                                 Boolean gettingSuccessfulHits) {
-        Set<String> opponentShots = opponent.getFiredSalvoes().stream().map(oneSalvo -> oneSalvo.getLocations())
-                .flatMap(Collection::stream).collect(Collectors.toSet());
-        Set<String> ownerShipLocations = oneGP.getBoatFleet().stream().map(oneShip -> oneShip.getLocation())
-                .flatMap(Collection::stream).collect(Collectors.toSet());
-        Set<String> output;
+        if (opponentShots != null) {
+            Set<String> output;
+            if (gettingSuccessfulHits) {
+                output = opponentShots.stream().filter(ownerShipLocations::contains)
+                        .collect(Collectors.toSet());
+            } else {
+                output = opponentShots.stream().filter(oneShot -> !ownerShipLocations.contains(oneShot))
+                        .collect(Collectors.toSet());
+            }
+            return output;
+        } else return null;
+    }
 
-        if (gettingSuccessfulHits) {
-            output = opponentShots.stream().filter(ownerShipLocations::contains)
-                    .collect(Collectors.toSet());
-        } else {
-            output = opponentShots.stream().filter(oneShot -> !ownerShipLocations.contains(oneShot))
-                    .collect(Collectors.toSet());
-        }
+    private Set<Object> fleetStatusChecker(GamePlayer viewer, GamePlayer oneGP, Set<String> opponentShots) {
+        Set<Object> output = oneGP.getBoatFleet().stream().map(oneShip -> shipStatusMapper(viewer, oneShip, opponentShots))
+                .collect(Collectors.toSet());
         return output;
     }
 
+    private Map<String, Object> shipStatusMapper (GamePlayer viewer, Ship oneShip, Set<String> opponentShots) {
+        Boolean isSunk = false;
+        Object totalDamage = 0;
+        if (opponentShots != null) {
+            isSunk = oneShip.getLocation().stream().allMatch(opponentShots::contains);
+
+            if (viewer.getId() == oneShip.getGamePlayer().getId()) {
+                totalDamage = oneShip.getLocation().stream().filter(opponentShots::contains).count();
+            } else {totalDamage = null;}
+        }
+
+        Map output = new LinkedHashMap();
+        output.put("type", oneShip.getType());
+        output.put("isSunk", isSunk);
+        output.put("totalDamage", totalDamage);
+
+        return output;
+    }
 
     //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
