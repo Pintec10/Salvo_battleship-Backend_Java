@@ -26,10 +26,18 @@ public class Game {
     @OneToMany(mappedBy="game")
     private Set<Score> scoresPerGame = new HashSet<>();
 
+    private Integer currentTurn;
+
+    private Boolean isGameOver;
+
     //constructors
     public Game(){};
     public Game(Date creationDate) {
         this.creationDate = creationDate;
+    }
+    public Game(Date creationDate, Integer currentTurn) {
+        this.creationDate = creationDate;
+        this.currentTurn = currentTurn;
     }
 
 
@@ -46,9 +54,17 @@ public class Game {
         return id;
     }
 
+    public Integer getCurrentTurn() { return currentTurn;}
+
+    public Boolean getIsGameOver() { return isGameOver; }
+
     public void setCreationDate(Date creationDate) {
         this.creationDate = creationDate;
     }
+
+    public void setCurrentTurn(Integer currentTurn) { this.currentTurn = currentTurn; }
+
+    public void setIsGameOver(Boolean isGameOver) { this.isGameOver = isGameOver; }
 
     public void addParticipationPerGame(GamePlayer participation) {
         participationsPerGame.add(participation);

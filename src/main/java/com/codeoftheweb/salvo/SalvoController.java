@@ -157,7 +157,9 @@ public class SalvoController {
             }
             else {
                 newSalvo.setGamePlayer(currentGamePlayer);
-                newSalvo.setTurn(5); //TO BE CHANGED LATER
+                newSalvo.setTurn(currentGamePlayer.getGame().getCurrentTurn());
+                System.out.println("in salvo saving, turn is " + currentGamePlayer.getGame().getCurrentTurn());
+                System.out.println("and game is " + currentGamePlayer.getGame().getId());
                 salvorepo.save(newSalvo);
                 return new ResponseEntity<>("Salvo successfully fired!", HttpStatus.CREATED);
             }
@@ -183,7 +185,7 @@ public class SalvoController {
         gameView.put("ships", shipView);
 
         //salvo info
-        Set<Object> salvoView = currentGamePlayer.getGame().getParticipationsPerGame()
+        Set<Map<String, Object>> salvoView = currentGamePlayer.getGame().getParticipationsPerGame()
                 .stream()
                 .map(oneGamePlayer -> GPStreamerForSalvo(oneGamePlayer))
                 .flatMap(Collection::stream)
@@ -191,16 +193,46 @@ public class SalvoController {
         gameView.put("salvoes", salvoView);
 
 
-        //------------..............-------------------
         //battle status info
-        Set<Object> battleStatusView = currentGamePlayer.getGame().getParticipationsPerGame()
+        Set<Map<String, Object>> battleStatusView = currentGamePlayer.getGame().getParticipationsPerGame()
                 .stream()
                 .map(oneGamePlayer -> GPMapperforBattleStatus(currentGamePlayer, oneGamePlayer))
                 .collect(Collectors.toSet());
-                //TO FINISH!
+
         gameView.put("battleStatus", battleStatusView);
 
-        //-----------**************-----------------
+
+        //game phase info and turn updater
+        Boolean setupComplete = true;
+        if(currentGame.getCurrentTurn() == 0) {
+            System.out.println("turn is zero");
+            Boolean allFleetsDeployed =
+                    currentGame.getParticipationsPerGame().stream().allMatch(oneGP -> oneGP.getBoatFleet().size() > 0);
+            if (allFleetsDeployed && currentGame.getParticipationsPerGame().size() == 2) {
+                setupComplete = true;
+                //currentGame.setCurrentTurn(1);
+                Game thisgame = gamerepo.findById(currentGame.getId()).orElse(null);
+                thisgame.setCurrentTurn(1);
+                System.out.println("turn should be one in game: " + currentGame.getId());
+                System.out.println(currentGame.getCurrentTurn());
+            } else {setupComplete = false;}
+        }
+
+
+        //Boolean turnCompleted = salvoView.stream()
+        //        .filter(oneSalvo -> oneSalvo.get("turn") == currentGame.getCurrentTurn()).count() == 2;
+        //if (turnCompleted) {
+        //    currentGame.setCurrentTurn(currentGame.getCurrentTurn() + 1);
+        //}
+
+
+
+
+
+        gameView.put("setupComplete", setupComplete);
+        gameView.put("gameOver", currentGame.getIsGameOver());
+        gameView.put("turn", currentGame.getCurrentTurn());
+
 
         //checking if Gp in request URL is actually the current authenticated player
         if (currentGamePlayer != null &&
@@ -212,50 +244,95 @@ public class SalvoController {
         }
     }
 
-    // ____________________________
-    private Map<String, Object> GPMapperforBattleStatus(GamePlayer viewer, GamePlayer oneGP) {
-        Set<String> ownerShipLocations = oneGP.getBoatFleet().stream().map(oneShip -> oneShip.getLocation())
-                .flatMap(Collection::stream).collect(Collectors.toSet());
-        GamePlayer opponent = oneGP.getGame().getParticipationsPerGame().stream()
+
+// -----> methods for battleStatus
+
+    private GamePlayer getOpponent (GamePlayer oneGP) {
+        return oneGP.getGame().getParticipationsPerGame().stream()
                 .filter(gp -> !gp.getId().equals(oneGP.getId()))
                 .findFirst().orElse(null);
-        Set<String> opponentShots;
-        if (opponent != null) {
-            opponentShots = opponent.getFiredSalvoes().stream().map(oneSalvo -> oneSalvo.getLocations())
-                    .flatMap(Collection::stream).collect(Collectors.toSet());
-        } else {opponentShots = null;}
+    }
+
+    private Set<String> getAllShots (GamePlayer oneGP ) {
+        if (oneGP != null) {
+        return oneGP.getFiredSalvoes().stream().map(oneSalvo -> oneSalvo.getLocations())
+                .flatMap(Collection::stream).collect(Collectors.toSet());}
+        else return null;
+    }
+
+    private Set<String> getAllShipLocations (GamePlayer oneGP) {
+        return oneGP.getBoatFleet().stream().map(oneShip -> oneShip.getLocation())
+                .flatMap(Collection::stream).collect(Collectors.toSet());
+    }
+
+    private Map<String, Object> GPMapperforBattleStatus(GamePlayer viewer, GamePlayer oneGP) {
+        //Set<String> ownerShipLocations = oneGP.getBoatFleet().stream().map(oneShip -> oneShip.getLocation())
+        //        .flatMap(Collection::stream).collect(Collectors.toSet());
+        //GamePlayer opponent = oneGP.getGame().getParticipationsPerGame().stream()
+        //        .filter(gp -> !gp.getId().equals(oneGP.getId()))
+        //        .findFirst().orElse(null);
+
+
+        //Set<String> opponentShots;
+        //if (opponent != null) {
+        //    opponentShots = opponent.getFiredSalvoes().stream().map(oneSalvo -> oneSalvo.getLocations())
+        //            .flatMap(Collection::stream).collect(Collectors.toSet());
+        //} else {opponentShots = null;}
 
         Map<String, Object> output = new LinkedHashMap<>();
         output.put("gamePlayer", oneGP.getId());
-        output.put("hitsReceived", hitsReceivedCalculator(ownerShipLocations, opponentShots, true));
-        output.put("missReceived", hitsReceivedCalculator(ownerShipLocations, opponentShots,false));
-        output.put("fleetStatus", fleetStatusChecker(viewer, oneGP, opponentShots));
+        //output.put("hitsReceived", hitsReceivedCalculator(ownerShipLocations, opponentShots, true));
+        //output.put("missReceived", hitsReceivedCalculator(ownerShipLocations, opponentShots,false));
+        //output.put("fleetStatus", fleetStatusChecker(viewer, oneGP, opponentShots));
+        output.put("hitsReceived", hitsReceivedCalculator(oneGP, true));
+        output.put("missReceived", hitsReceivedCalculator(oneGP,false));
+        output.put("fleetStatus", fleetStatusChecker(viewer, oneGP));
         return output;
     }
 
-
-    private Set<String> hitsReceivedCalculator (Set<String> ownerShipLocations, Set<String> opponentShots,
-                                                Boolean gettingSuccessfulHits) {
-        if (opponentShots != null) {
+    //private Set<String> hitsReceivedCalculator (Set<String> ownerShipLocations, Set<String> opponentShots,
+    //                                            Boolean gettingSuccessfulHits) {
+        //if (opponentShots != null) {
+        //    Set<String> output;
+        //    if (gettingSuccessfulHits) {
+        //        output = opponentShots.stream().filter(ownerShipLocations::contains)
+        //                .collect(Collectors.toSet());
+        //    } else {
+        //        output = opponentShots.stream().filter(oneShot -> !ownerShipLocations.contains(oneShot))
+        //                .collect(Collectors.toSet());
+        //    }
+        //    return output;
+        //} else return null;
+    private Set<String> hitsReceivedCalculator (GamePlayer oneGP, Boolean gettingSuccessfulHits) {
+        Set<String> ownerShipLocations = getAllShipLocations(oneGP);
+        Set<String> opponentShots = getAllShots(getOpponent(oneGP));
+        if (opponentShots != null ) {
             Set<String> output;
-            if (gettingSuccessfulHits) {
+            if(gettingSuccessfulHits) {
                 output = opponentShots.stream().filter(ownerShipLocations::contains)
-                        .collect(Collectors.toSet());
+                                .collect(Collectors.toSet());
             } else {
                 output = opponentShots.stream().filter(oneShot -> !ownerShipLocations.contains(oneShot))
-                        .collect(Collectors.toSet());
+                                .collect(Collectors.toSet());
             }
             return output;
         } else return null;
     }
 
-    private Set<Object> fleetStatusChecker(GamePlayer viewer, GamePlayer oneGP, Set<String> opponentShots) {
-        Set<Object> output = oneGP.getBoatFleet().stream().map(oneShip -> shipStatusMapper(viewer, oneShip, opponentShots))
+    //private Set<Object> fleetStatusChecker(GamePlayer viewer, GamePlayer oneGP, Set<String> opponentShots) {
+    //    Set<Object> output = oneGP.getBoatFleet().stream().map(oneShip -> shipStatusMapper(viewer, oneShip, opponentShots))
+    //            .collect(Collectors.toSet());
+    //    return output;
+    //}
+    private Set<Map<String, Object>> fleetStatusChecker(GamePlayer viewer, GamePlayer oneGP) {
+        Set<Map<String, Object>> output = oneGP.getBoatFleet().stream().map(oneShip -> shipStatusMapper(viewer, oneShip))
                 .collect(Collectors.toSet());
         return output;
     }
 
-    private Map<String, Object> shipStatusMapper (GamePlayer viewer, Ship oneShip, Set<String> opponentShots) {
+    private Map<String, Object> shipStatusMapper (GamePlayer viewer, Ship oneShip) {
+        GamePlayer shipOwner = oneShip.getGamePlayer();
+        Set<String> opponentShots = getAllShots(getOpponent(shipOwner));
         Boolean isSunk = false;
         Object totalDamage = 0;
         if (opponentShots != null) {
@@ -270,18 +347,19 @@ public class SalvoController {
         output.put("type", oneShip.getType());
         output.put("isSunk", isSunk);
         output.put("totalDamage", totalDamage);
+        output.put("maxHP", oneShip.getLocation().size());
 
         return output;
     }
 
-    //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    private List<Object> GPStreamerForSalvo(GamePlayer oneGamePlayer) {
-        List<Object> output = firedSalvoesStreamer(oneGamePlayer.getFiredSalvoes());
+// -----> methods for salvoes
+    private List<Map<String, Object>> GPStreamerForSalvo(GamePlayer oneGamePlayer) {
+        List<Map<String, Object>> output = firedSalvoesStreamer(oneGamePlayer.getFiredSalvoes());
         return output;
     }
 
-    private List<Object> firedSalvoesStreamer(Set<Salvo> salvoesList) {
+    private List<Map<String, Object>> firedSalvoesStreamer(Set<Salvo> salvoesList) {
         return salvoesList.stream()
                 .map(oneSalvo -> salvoMapper(oneSalvo))
                 .collect(Collectors.toList());
@@ -296,6 +374,7 @@ public class SalvoController {
     }
 
 
+// -----> methods for ships
     private Map<String, Object> shipMapper(Ship oneShip) {
         Map <String, Object> output = new LinkedHashMap<>();
         output.put("type", oneShip.getType());
@@ -347,7 +426,7 @@ public class SalvoController {
     public ResponseEntity<Map<String, Object>> createGame(Authentication authentication) {
         if (authenticatedUserMapper(authentication).get("id") != null) {
             Date now = new Date();
-            Game newGame = new Game(now);
+            Game newGame = new Game(now, 0);
             Player currentPlayer = plrepo.findByUserName(authentication.getName());
             GamePlayer newGp = new GamePlayer(now, currentPlayer, newGame);
             gamerepo.save(newGame);
