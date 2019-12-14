@@ -40,6 +40,9 @@ public class SalvoController {
     @Autowired
     private SalvoRepository salvorepo;
 
+    @Autowired
+    private ScoreRepository scorerepo;
+
 
     // ---------- CURRENT AUTHENTICATED USER METHODS ----------
 
@@ -144,7 +147,9 @@ public class SalvoController {
     public ResponseEntity<String> placeSalvoes(@PathVariable Long gamePlayerID, @RequestBody Salvo newSalvo,
                                              Authentication authentication) {
         GamePlayer currentGamePlayer = gprepo.findById(gamePlayerID).orElse(null);
-
+        System.out.println("Begin salvo placement:");
+        System.out.println(currentGamePlayer.getGame().getId());
+        System.out.println(currentGamePlayer.getGame().getCurrentTurn());
         if ((authenticatedUserMapper(authentication).get("id") == null) ||
                 (currentGamePlayer == null) ||
                 (authenticatedUserMapper(authentication).get("id") != currentGamePlayer.getPlayer().getId())) {
@@ -158,8 +163,9 @@ public class SalvoController {
             else {
                 newSalvo.setGamePlayer(currentGamePlayer);
                 newSalvo.setTurn(currentGamePlayer.getGame().getCurrentTurn());
-                System.out.println("in salvo saving, turn is " + currentGamePlayer.getGame().getCurrentTurn());
-                System.out.println("and game is " + currentGamePlayer.getGame().getId());
+                System.out.println("End salvo placement:");
+                System.out.println(currentGamePlayer.getGame().getId());
+                System.out.println(currentGamePlayer.getGame().getCurrentTurn());
                 salvorepo.save(newSalvo);
                 return new ResponseEntity<>("Salvo successfully fired!", HttpStatus.CREATED);
             }
@@ -192,46 +198,66 @@ public class SalvoController {
                 .collect(Collectors.toSet());
         gameView.put("salvoes", salvoView);
 
-
         //battle status info
         Set<Map<String, Object>> battleStatusView = currentGamePlayer.getGame().getParticipationsPerGame()
                 .stream()
                 .map(oneGamePlayer -> GPMapperforBattleStatus(currentGamePlayer, oneGamePlayer))
                 .collect(Collectors.toSet());
-
         gameView.put("battleStatus", battleStatusView);
 
-
-        //game phase info and turn updater
+        //check if boat setup is complete
         Boolean setupComplete = true;
         if(currentGame.getCurrentTurn() == 0) {
-            System.out.println("turn is zero");
             Boolean allFleetsDeployed =
                     currentGame.getParticipationsPerGame().stream().allMatch(oneGP -> oneGP.getBoatFleet().size() > 0);
             if (allFleetsDeployed && currentGame.getParticipationsPerGame().size() == 2) {
-                setupComplete = true;
-                //currentGame.setCurrentTurn(1);
-                Game thisgame = gamerepo.findById(currentGame.getId()).orElse(null);
-                thisgame.setCurrentTurn(1);
-                System.out.println("turn should be one in game: " + currentGame.getId());
-                System.out.println(currentGame.getCurrentTurn());
+                currentGame.setCurrentTurn(1);
+                gamerepo.save(currentGame);
             } else {setupComplete = false;}
         }
-
-
-        //Boolean turnCompleted = salvoView.stream()
-        //        .filter(oneSalvo -> oneSalvo.get("turn") == currentGame.getCurrentTurn()).count() == 2;
-        //if (turnCompleted) {
-        //    currentGame.setCurrentTurn(currentGame.getCurrentTurn() + 1);
-        //}
-
-
-
-
-
         gameView.put("setupComplete", setupComplete);
-        gameView.put("gameOver", currentGame.getIsGameOver());
-        gameView.put("turn", currentGame.getCurrentTurn());
+
+        //turn updater
+        Boolean turnCompleted = currentGame.getParticipationsPerGame().stream().map(oneGP -> oneGP.getFiredSalvoes())
+                .flatMap(Collection::stream)
+                .filter(oneSalvo -> oneSalvo.getTurn() == currentGame.getCurrentTurn()).count() == 2;
+        if (turnCompleted) {
+            currentGame.setCurrentTurn(currentGame.getCurrentTurn() + 1);
+            gamerepo.save(currentGame);
+        }
+        gameView.put("currentTurn", currentGame.getCurrentTurn());
+
+        //check if game is over and assign scores (REMEMBER UPDATE SCORES BEFORE SETTING GAME OVER)
+        Boolean viewerWon = isAnnihilated(getOpponent(currentGamePlayer));
+        Boolean opponentWon = isAnnihilated(currentGamePlayer);
+        Date endTime = new Date();
+        System.out.println("before entering, turn completed:" + turnCompleted);
+        System.out.println("gameover:" + currentGame.isGameOver());
+        if (turnCompleted && !currentGame.isGameOver()) {
+            System.out.println("entering final part");
+            Double viewerPoints = 0.0;
+            Double opponentPoints = 0.0;
+            if (viewerWon && opponentWon) {
+                viewerPoints = 0.5;
+                opponentPoints = 0.5;
+            } else if (viewerWon) {
+                viewerPoints = 1.0;
+            } else if (opponentWon) {
+                opponentPoints = 1.0;
+            }
+
+            if(viewerWon || opponentWon) {
+                System.out.println("entering score saving and shutting game down");
+                scorerepo.save(new Score(currentGame, currentGamePlayer.getPlayer(), viewerPoints, endTime));
+                scorerepo.save(new Score(currentGame, getOpponent(currentGamePlayer).getPlayer(), opponentPoints, endTime));
+                currentGame.setGameOver(true);
+                gamerepo.save(currentGame);
+            }
+        }
+
+        gameView.put("gameOver", currentGame.isGameOver());
+        gameView.put("viewerVictory", viewerWon);
+        gameView.put("opponentVictory", opponentWon);
 
 
         //checking if Gp in request URL is actually the current authenticated player
@@ -242,6 +268,7 @@ public class SalvoController {
         } else {
             return new ResponseEntity<>(makeMap("error", "nice try!"), HttpStatus.UNAUTHORIZED);
         }
+
     }
 
 
@@ -266,43 +293,15 @@ public class SalvoController {
     }
 
     private Map<String, Object> GPMapperforBattleStatus(GamePlayer viewer, GamePlayer oneGP) {
-        //Set<String> ownerShipLocations = oneGP.getBoatFleet().stream().map(oneShip -> oneShip.getLocation())
-        //        .flatMap(Collection::stream).collect(Collectors.toSet());
-        //GamePlayer opponent = oneGP.getGame().getParticipationsPerGame().stream()
-        //        .filter(gp -> !gp.getId().equals(oneGP.getId()))
-        //        .findFirst().orElse(null);
-
-
-        //Set<String> opponentShots;
-        //if (opponent != null) {
-        //    opponentShots = opponent.getFiredSalvoes().stream().map(oneSalvo -> oneSalvo.getLocations())
-        //            .flatMap(Collection::stream).collect(Collectors.toSet());
-        //} else {opponentShots = null;}
 
         Map<String, Object> output = new LinkedHashMap<>();
         output.put("gamePlayer", oneGP.getId());
-        //output.put("hitsReceived", hitsReceivedCalculator(ownerShipLocations, opponentShots, true));
-        //output.put("missReceived", hitsReceivedCalculator(ownerShipLocations, opponentShots,false));
-        //output.put("fleetStatus", fleetStatusChecker(viewer, oneGP, opponentShots));
         output.put("hitsReceived", hitsReceivedCalculator(oneGP, true));
         output.put("missReceived", hitsReceivedCalculator(oneGP,false));
         output.put("fleetStatus", fleetStatusChecker(viewer, oneGP));
         return output;
     }
 
-    //private Set<String> hitsReceivedCalculator (Set<String> ownerShipLocations, Set<String> opponentShots,
-    //                                            Boolean gettingSuccessfulHits) {
-        //if (opponentShots != null) {
-        //    Set<String> output;
-        //    if (gettingSuccessfulHits) {
-        //        output = opponentShots.stream().filter(ownerShipLocations::contains)
-        //                .collect(Collectors.toSet());
-        //    } else {
-        //        output = opponentShots.stream().filter(oneShot -> !ownerShipLocations.contains(oneShot))
-        //                .collect(Collectors.toSet());
-        //    }
-        //    return output;
-        //} else return null;
     private Set<String> hitsReceivedCalculator (GamePlayer oneGP, Boolean gettingSuccessfulHits) {
         Set<String> ownerShipLocations = getAllShipLocations(oneGP);
         Set<String> opponentShots = getAllShots(getOpponent(oneGP));
@@ -319,11 +318,6 @@ public class SalvoController {
         } else return null;
     }
 
-    //private Set<Object> fleetStatusChecker(GamePlayer viewer, GamePlayer oneGP, Set<String> opponentShots) {
-    //    Set<Object> output = oneGP.getBoatFleet().stream().map(oneShip -> shipStatusMapper(viewer, oneShip, opponentShots))
-    //            .collect(Collectors.toSet());
-    //    return output;
-    //}
     private Set<Map<String, Object>> fleetStatusChecker(GamePlayer viewer, GamePlayer oneGP) {
         Set<Map<String, Object>> output = oneGP.getBoatFleet().stream().map(oneShip -> shipStatusMapper(viewer, oneShip))
                 .collect(Collectors.toSet());
@@ -331,25 +325,50 @@ public class SalvoController {
     }
 
     private Map<String, Object> shipStatusMapper (GamePlayer viewer, Ship oneShip) {
-        GamePlayer shipOwner = oneShip.getGamePlayer();
-        Set<String> opponentShots = getAllShots(getOpponent(shipOwner));
-        Boolean isSunk = false;
-        Object totalDamage = 0;
-        if (opponentShots != null) {
+        //GamePlayer shipOwner = oneShip.getGamePlayer();
+        //Set<String> opponentShots = getAllShots(getOpponent(shipOwner));
+        //Boolean isSunk = false;
+        //Object totalDamage = 0;
+        /*if (opponentShots != null) {
             isSunk = oneShip.getLocation().stream().allMatch(opponentShots::contains);
 
             if (viewer.getId() == oneShip.getGamePlayer().getId()) {
                 totalDamage = oneShip.getLocation().stream().filter(opponentShots::contains).count();
             } else {totalDamage = null;}
-        }
+        }*/
 
         Map output = new LinkedHashMap();
         output.put("type", oneShip.getType());
-        output.put("isSunk", isSunk);
-        output.put("totalDamage", totalDamage);
+        output.put("isSunk", isSunk(oneShip));
+        output.put("totalDamage", getTotalDamage(oneShip, viewer));
         output.put("maxHP", oneShip.getLocation().size());
 
         return output;
+    }
+
+    private Boolean isSunk (Ship oneShip) {
+        GamePlayer shipOwner = oneShip.getGamePlayer();
+        Set<String> opponentShots = getAllShots(getOpponent(shipOwner));
+        if (opponentShots != null) {
+            return oneShip.getLocation().stream().allMatch(opponentShots::contains);
+        } else return false;
+    }
+
+    private Long getTotalDamage (Ship oneShip, GamePlayer viewer) {
+        GamePlayer shipOwner = oneShip.getGamePlayer();
+        Set<String> opponentShots = getAllShots(getOpponent(shipOwner));
+        if (opponentShots != null) {
+            if (viewer.getId() == oneShip.getGamePlayer().getId()) {
+                return oneShip.getLocation().stream().filter(opponentShots::contains).count();
+            } else {return null;}
+        } else return null;
+    }
+
+    private Boolean isAnnihilated (GamePlayer checkedPlayer) {
+        return checkedPlayer.getBoatFleet().stream()
+                .allMatch(oneShip -> isSunk(oneShip));
+              //.map(oneShip -> isSunk(oneShip))
+              //.allMatch(oneShipStatus -> oneShipStatus.get("isSunk").toString() == "true");
     }
 
 

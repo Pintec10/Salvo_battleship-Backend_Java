@@ -28,7 +28,7 @@ public class Game {
 
     private Integer currentTurn;
 
-    private Boolean isGameOver;
+    private Boolean gameOver = false;
 
     //constructors
     public Game(){};
@@ -56,15 +56,15 @@ public class Game {
 
     public Integer getCurrentTurn() { return currentTurn;}
 
-    public Boolean getIsGameOver() { return isGameOver; }
+    public Boolean isGameOver() { return gameOver; }
 
     public void setCreationDate(Date creationDate) {
         this.creationDate = creationDate;
     }
 
-    public void setCurrentTurn(Integer currentTurn) { this.currentTurn = currentTurn; }
+    public void setCurrentTurn(Integer turn) { this.currentTurn = turn; }
 
-    public void setIsGameOver(Boolean isGameOver) { this.isGameOver = isGameOver; }
+    public void setGameOver(Boolean gameOver) { this.gameOver = gameOver; }
 
     public void addParticipationPerGame(GamePlayer participation) {
         participationsPerGame.add(participation);
