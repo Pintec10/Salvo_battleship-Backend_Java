@@ -147,27 +147,30 @@ public class SalvoController {
     public ResponseEntity<String> placeSalvoes(@PathVariable Long gamePlayerID, @RequestBody Salvo newSalvo,
                                              Authentication authentication) {
         GamePlayer currentGamePlayer = gprepo.findById(gamePlayerID).orElse(null);
-        System.out.println("Begin salvo placement:");
-        System.out.println(currentGamePlayer.getGame().getId());
-        System.out.println(currentGamePlayer.getGame().getCurrentTurn());
+
         if ((authenticatedUserMapper(authentication).get("id") == null) ||
                 (currentGamePlayer == null) ||
                 (authenticatedUserMapper(authentication).get("id") != currentGamePlayer.getPlayer().getId())) {
             return new ResponseEntity<>("No valid user logged in ", HttpStatus.UNAUTHORIZED);
         } else {
+            newSalvo.setTurn(currentGamePlayer.getGame().getCurrentTurn());
             Set<Salvo> previousSalvoes = currentGamePlayer.getFiredSalvoes();
-            if (previousSalvoes.stream().anyMatch
-                    (onePrevSalvo -> onePrevSalvo.getTurn() == newSalvo.getTurn())) {
-                return new ResponseEntity<>("Salvo already fired for that turn!", HttpStatus.FORBIDDEN);
+            if ((previousSalvoes.stream().anyMatch
+                    (onePrevSalvo -> onePrevSalvo.getTurn() == newSalvo.getTurn())) ||
+            currentGamePlayer.getGame().getCurrentTurn() == 0) {
+                return new ResponseEntity<>("Cannot fire a Salvo now!", HttpStatus.FORBIDDEN);
+            }
+            else if (currentGamePlayer.getGame().isGameOver()) {
+                return new ResponseEntity<>("Game has finished already!", HttpStatus.FORBIDDEN);
+            }
+            else if (newSalvo.getLocations().size() > 5) {
+                return new ResponseEntity<>("Maximum five shots allowed!", HttpStatus.FORBIDDEN);
             }
             else {
-                newSalvo.setGamePlayer(currentGamePlayer);
-                newSalvo.setTurn(currentGamePlayer.getGame().getCurrentTurn());
-                System.out.println("End salvo placement:");
-                System.out.println(currentGamePlayer.getGame().getId());
-                System.out.println(currentGamePlayer.getGame().getCurrentTurn());
-                salvorepo.save(newSalvo);
-                return new ResponseEntity<>("Salvo successfully fired!", HttpStatus.CREATED);
+            newSalvo.setGamePlayer(currentGamePlayer);
+            //newSalvo.setTurn(currentGamePlayer.getGame().getCurrentTurn());
+            salvorepo.save(newSalvo);
+            return new ResponseEntity<>("Salvo successfully fired!", HttpStatus.CREATED);
             }
         }
 
@@ -231,10 +234,7 @@ public class SalvoController {
         Boolean viewerWon = isAnnihilated(getOpponent(currentGamePlayer));
         Boolean opponentWon = isAnnihilated(currentGamePlayer);
         Date endTime = new Date();
-        System.out.println("before entering, turn completed:" + turnCompleted);
-        System.out.println("gameover:" + currentGame.isGameOver());
         if (turnCompleted && !currentGame.isGameOver()) {
-            System.out.println("entering final part");
             Double viewerPoints = 0.0;
             Double opponentPoints = 0.0;
             if (viewerWon && opponentWon) {
@@ -247,7 +247,6 @@ public class SalvoController {
             }
 
             if(viewerWon || opponentWon) {
-                System.out.println("entering score saving and shutting game down");
                 scorerepo.save(new Score(currentGame, currentGamePlayer.getPlayer(), viewerPoints, endTime));
                 scorerepo.save(new Score(currentGame, getOpponent(currentGamePlayer).getPlayer(), opponentPoints, endTime));
                 currentGame.setGameOver(true);
@@ -319,10 +318,14 @@ public class SalvoController {
     }
 
     private Set<Map<String, Object>> fleetStatusChecker(GamePlayer viewer, GamePlayer oneGP) {
-        Set<Map<String, Object>> output = oneGP.getBoatFleet().stream().map(oneShip -> shipStatusMapper(viewer, oneShip))
+        Set<Map<String, Object>> output = oneGP.getBoatFleet().stream()
+                .sorted(Comparator.comparing(oneShip -> oneShip.getLocation().size()))
+                .map(oneShip -> shipStatusMapper(viewer, oneShip))
                 .collect(Collectors.toSet());
         return output;
     }
+
+    // gpList.stream().sorted(Comparator.comparing(GamePlayer::getId)).map(
 
     private Map<String, Object> shipStatusMapper (GamePlayer viewer, Ship oneShip) {
         //GamePlayer shipOwner = oneShip.getGamePlayer();
@@ -365,10 +368,10 @@ public class SalvoController {
     }
 
     private Boolean isAnnihilated (GamePlayer checkedPlayer) {
-        return checkedPlayer.getBoatFleet().stream()
-                .allMatch(oneShip -> isSunk(oneShip));
-              //.map(oneShip -> isSunk(oneShip))
-              //.allMatch(oneShipStatus -> oneShipStatus.get("isSunk").toString() == "true");
+        if (checkedPlayer != null) {
+            return checkedPlayer.getBoatFleet().stream()
+                    .allMatch(oneShip -> isSunk(oneShip));
+        } else return false;
     }
 
 
