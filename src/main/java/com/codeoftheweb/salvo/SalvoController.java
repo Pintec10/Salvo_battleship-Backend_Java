@@ -20,10 +20,8 @@ import java.util.stream.Collectors;
 public class SalvoController {
 
 
-    @Bean
-    public PasswordEncoder newPlayerPasswordEncoder() {
-        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
-    }
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
     @Autowired
     private GameRepository gamerepo;
@@ -56,7 +54,7 @@ public class SalvoController {
             output.put("name", plrepo.findByUserName(authentication.getName()).getUserName());
         } else {
             output.put("id", null);
-            output.put("name", null);
+            output.put("name", "ciao");
         }
         return output;
     }
@@ -433,7 +431,7 @@ public class SalvoController {
             return new ResponseEntity<>(makeMap("error", "Email already in use"), HttpStatus.FORBIDDEN);
         }
 
-        Player newUser = new Player(username, newPlayerPasswordEncoder().encode(password));
+        Player newUser = new Player(username, passwordEncoder.encode(password));
         plrepo.save(newUser);
         return new ResponseEntity<>(makeMap("username", newUser.getUserName()), HttpStatus.CREATED);
     }
