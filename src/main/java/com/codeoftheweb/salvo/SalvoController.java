@@ -50,7 +50,7 @@ public class SalvoController {
         Map<String, Object> output = new LinkedHashMap<>();
 
         System.out.println("isGuest  "+ isGuest(authentication));
-        if (isGuest(authentication)){
+        if (!isGuest(authentication)){
 
             output.put("id", plrepo.findByUserName(authentication.getName()).getId());
             output.put("name", plrepo.findByUserName(authentication.getName()).getUserName());
