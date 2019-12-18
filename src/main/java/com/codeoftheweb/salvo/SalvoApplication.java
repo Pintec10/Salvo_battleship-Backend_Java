@@ -21,15 +21,17 @@ import org.springframework.security.web.authentication.logout.HttpStatusReturnin
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.*;
 
 @SpringBootApplication
 public class SalvoApplication {
-	//public class SalvoApplication extends SpringBootServletInitializer {
 
 	public static void main(String[] args) {
 		SpringApplication.run(SalvoApplication.class, args);
 	}
+
 
 	@Bean
 	public PasswordEncoder passwordEncoder() {
