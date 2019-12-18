@@ -54,7 +54,7 @@ public class SalvoController {
             output.put("name", plrepo.findByUserName(authentication.getName()).getUserName());
         } else {
             output.put("id", null);
-            output.put("name", "ciao");
+            output.put("name", null);
         }
         return output;
     }
