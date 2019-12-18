@@ -36,7 +36,7 @@ public class SalvoApplication {
 		return PasswordEncoderFactories.createDelegatingPasswordEncoder();
 	}
 
-	@Bean
+	/*@Bean
 	public CommandLineRunner initParticipationData(PlayerRepository pRepository,
 			GameRepository gmRepository, GamePlayerRepository gpRepository,
 			ShipRepository shRepository, SalvoRepository slRepository,
@@ -227,7 +227,7 @@ public class SalvoApplication {
 			scRepository.save(new Score(gam4, pla1, 0.5, d4end));
 
 		};
-	}
+	}*/
 }
 
 @Configuration
