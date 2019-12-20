@@ -29,7 +29,7 @@ import java.util.*;
 
 @SpringBootApplication
 public class SalvoApplication {
-	//public class SalvoApplication extends SpringBootServletInitializer {
+
 
 	public static void main(String[] args) {
 		SpringApplication.run(SalvoApplication.class, args);
@@ -40,6 +40,8 @@ public class SalvoApplication {
 		return PasswordEncoderFactories.createDelegatingPasswordEncoder();
 	}
 
+
+	// TESTBED - for testing purposes only
 	/*@Bean
 	public CommandLineRunner initParticipationData(PlayerRepository pRepository,
 			GameRepository gmRepository, GamePlayerRepository gpRepository,

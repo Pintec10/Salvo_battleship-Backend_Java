@@ -329,17 +329,6 @@ public class SalvoController {
 
 
     private Map<String, Object> shipStatusMapper (GamePlayer viewer, Ship oneShip) {
-        //GamePlayer shipOwner = oneShip.getGamePlayer();
-        //Set<String> opponentShots = getAllShots(getOpponent(shipOwner));
-        //Boolean isSunk = false;
-        //Object totalDamage = 0;
-        /*if (opponentShots != null) {
-            isSunk = oneShip.getLocation().stream().allMatch(opponentShots::contains);
-
-            if (viewer.getId() == oneShip.getGamePlayer().getId()) {
-                totalDamage = oneShip.getLocation().stream().filter(opponentShots::contains).count();
-            } else {totalDamage = null;}
-        }*/
 
         Map output = new LinkedHashMap();
         output.put("type", oneShip.getType());
