@@ -326,7 +326,7 @@ public class SalvoController {
         return output;
     }
 
-    // gpList.stream().sorted(Comparator.comparing(GamePlayer::getId)).map(
+
 
     private Map<String, Object> shipStatusMapper (GamePlayer viewer, Ship oneShip) {
         //GamePlayer shipOwner = oneShip.getGamePlayer();
