@@ -18,26 +18,30 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.WebAttributes;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.*;
 
 @SpringBootApplication
 public class SalvoApplication {
 
+
 	public static void main(String[] args) {
 		SpringApplication.run(SalvoApplication.class, args);
 	}
-
 
 	@Bean
 	public PasswordEncoder passwordEncoder() {
 		return PasswordEncoderFactories.createDelegatingPasswordEncoder();
 	}
 
+
+	// TESTBED - for testing purposes only
 	@Bean
 	public CommandLineRunner initParticipationData(PlayerRepository pRepository,
 			GameRepository gmRepository, GamePlayerRepository gpRepository,
@@ -52,7 +56,6 @@ public class SalvoApplication {
 			pRepository.save(pla2);
 			pRepository.save(pla3);
 			pRepository.save(pla4);
-
 			Date d1 = new Date();
 			Date d2 = Date.from(d1.toInstant().plusSeconds(3600));
 			Date d3 = Date.from(d2.toInstant().plusSeconds(3600));
@@ -77,17 +80,14 @@ public class SalvoApplication {
 			gmRepository.save(gam6);
 			gmRepository.save(gam7);
 			gmRepository.save(gam8);
-
 			GamePlayer par01 = new GamePlayer(d1);
 			par01.setPlayer(pla1);
 			par01.setGame(gam1);
 			gpRepository.save(par01);
-
 			GamePlayer par02 = new GamePlayer(d1);
 			par02.setPlayer(pla2);
 			par02.setGame(gam1);
 			gpRepository.save(par02);
-
 			GamePlayer par03 = new GamePlayer(d2, pla1, gam2);
 			GamePlayer par04 = new GamePlayer(d2, pla2, gam2);
 			GamePlayer par05 = new GamePlayer(d3, pla2, gam3);
@@ -112,8 +112,6 @@ public class SalvoApplication {
 			gpRepository.save(par12);
 			gpRepository.save(par13);
 			gpRepository.save(par14);
-
-
 			List<String> loc01 = Arrays.asList("H2", "H3", "H4");
 			List<String> loc02 = Arrays.asList("E1", "F1", "G1");
 			List<String> loc03 = Arrays.asList("B4", "B5");
@@ -168,8 +166,6 @@ public class SalvoApplication {
 			shRepository.save(new Ship("Patrol Boat", par13, loc25));
 			shRepository.save(new Ship("Submarine", par14,loc26));
 			shRepository.save(new Ship("Patrol Boat", par14, loc27));
-
-
 			Set<String> slv01 = new HashSet<>(Arrays.asList("B5", "C5", "F1"));
 			Set<String> slv02 = new HashSet<>(Arrays.asList("B4", "B5", "B6"));
 			Set<String> slv03 = new HashSet<>(Arrays.asList("F2", "D5"));
@@ -212,13 +208,10 @@ public class SalvoApplication {
 			slRepository.save(new Salvo(par09, 2, slv19));
 			slRepository.save(new Salvo(par10, 2, slv20));
 			slRepository.save(new Salvo(par10, 3, slv21));
-
-
 			Date d1end = Date.from(d1.toInstant().plusSeconds(1800));
 			Date d2end = Date.from(d2.toInstant().plusSeconds(1800));
 			Date d3end = Date.from(d3.toInstant().plusSeconds(1800));
 			Date d4end = Date.from(d4.toInstant().plusSeconds(1800));
-
 			scRepository.save(new Score(gam1, pla1, 1, d1end));
 			scRepository.save(new Score(gam1, pla2, 0, d1end));
 			scRepository.save(new Score(gam2, pla1, 0.5, d2end));
@@ -227,7 +220,6 @@ public class SalvoApplication {
 			scRepository.save(new Score(gam3, pla4, 0, d3end));
 			scRepository.save(new Score(gam4, pla2, 0.5, d4end));
 			scRepository.save(new Score(gam4, pla1, 0.5, d4end));
-
 		};
 	}
 }
@@ -259,6 +251,7 @@ class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
+		http.cors();
 		http.authorizeRequests()
 				.antMatchers("/api/games", "/home", "/api/login", "/api/players").permitAll()
 				.anyRequest().fullyAuthenticated();
@@ -290,5 +283,23 @@ class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 			session.removeAttribute(WebAttributes.AUTHENTICATION_EXCEPTION);
 		}
 	}
-}
 
+	@Bean
+	public CorsConfigurationSource corsConfigurationSource() {
+		final CorsConfiguration configuration = new CorsConfiguration();
+		// The value of the 'Access-Control-Allow-Origin' header in the response must not be the wildcard '*' when the request's credentials mode is 'include'.
+//        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
+//        configuration.setAllowedOrigins(Arrays.asList("https://battleship-battlewreck-game.netlify.com", "http://localhost:3000"));
+		configuration.setAllowedOrigins(Arrays.asList("*"));
+		configuration.setAllowedMethods(Arrays.asList("HEAD",
+				"GET", "POST", "PUT", "DELETE", "PATCH"));
+		// setAllowCredentials(true) is important, otherwise:
+		// will fail with 403 Invalid CORS request
+		configuration.setAllowCredentials(true);
+		// setAllowedHeaders is important! Without it, OPTIONS preflight request
+		configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type"));
+		final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", configuration);
+		return source;
+	}
+}

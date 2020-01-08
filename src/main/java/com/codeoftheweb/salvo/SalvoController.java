@@ -20,10 +20,8 @@ import java.util.stream.Collectors;
 public class SalvoController {
 
 
-    @Bean
-    public PasswordEncoder newPlayerPasswordEncoder() {
-        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
-    }
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
     @Autowired
     private GameRepository gamerepo;
@@ -48,7 +46,9 @@ public class SalvoController {
 
     public Map<String, Object> authenticatedUserMapper(Authentication authentication) {
         Map<String, Object> output = new LinkedHashMap<>();
-        if (isGuest(authentication) == false){
+
+        if (!isGuest(authentication)){
+
             output.put("id", plrepo.findByUserName(authentication.getName()).getId());
             output.put("name", plrepo.findByUserName(authentication.getName()).getUserName());
         } else {
@@ -325,20 +325,9 @@ public class SalvoController {
         return output;
     }
 
-    // gpList.stream().sorted(Comparator.comparing(GamePlayer::getId)).map(
+
 
     private Map<String, Object> shipStatusMapper (GamePlayer viewer, Ship oneShip) {
-        //GamePlayer shipOwner = oneShip.getGamePlayer();
-        //Set<String> opponentShots = getAllShots(getOpponent(shipOwner));
-        //Boolean isSunk = false;
-        //Object totalDamage = 0;
-        /*if (opponentShots != null) {
-            isSunk = oneShip.getLocation().stream().allMatch(opponentShots::contains);
-
-            if (viewer.getId() == oneShip.getGamePlayer().getId()) {
-                totalDamage = oneShip.getLocation().stream().filter(opponentShots::contains).count();
-            } else {totalDamage = null;}
-        }*/
 
         Map output = new LinkedHashMap();
         output.put("type", oneShip.getType());
@@ -430,7 +419,7 @@ public class SalvoController {
             return new ResponseEntity<>(makeMap("error", "Email already in use"), HttpStatus.FORBIDDEN);
         }
 
-        Player newUser = new Player(username, newPlayerPasswordEncoder().encode(password));
+        Player newUser = new Player(username, passwordEncoder.encode(password));
         plrepo.save(newUser);
         return new ResponseEntity<>(makeMap("username", newUser.getUserName()), HttpStatus.CREATED);
     }

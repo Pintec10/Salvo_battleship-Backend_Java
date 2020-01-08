@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-public class Salvo /*implements Comparable*/ {
+public class Salvo {
 
     //fields
     @Id
@@ -49,8 +49,5 @@ public class Salvo /*implements Comparable*/ {
         return super.toString();
     }
 
-    //@Override
-    //public int compareTo(Object o) {
-    //    return this.getTurn().compareTo(((Salvo) o).getTurn());
-    //}
+
 }
