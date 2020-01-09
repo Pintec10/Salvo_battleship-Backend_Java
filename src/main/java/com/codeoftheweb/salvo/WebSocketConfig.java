@@ -20,7 +20,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/salvo-websocket")
                 .setAllowedOrigins("http://localhost:8081",
-                        "chrome-extension://ggnhohnkfcpcanfekomdkjffnfcjnjam") //to use APIC extension for Chrome
+                        "chrome-extension://ggnhohnkfcpcanfekomdkjffnfcjnjam", //to use APIC extension for Chrome
+                        "https://salvogame.netlify.com")
                 .withSockJS();
     }
 
