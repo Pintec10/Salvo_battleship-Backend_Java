@@ -145,7 +145,7 @@ public class SalvoController {
     // ---------- PLACE NEW SALVOES ----------
     @RequestMapping(value="/games/players/{gamePlayerID}/salvoes", method = RequestMethod.POST)
     public ResponseEntity<String> placeSalvoes(@PathVariable Long gamePlayerID, @RequestBody Salvo newSalvo,
-                                             Authentication authentication) {
+                                             Authentication authentication) throws Exception {
         GamePlayer currentGamePlayer = gprepo.findById(gamePlayerID).orElse(null);
 
         if ((authenticatedUserMapper(authentication).get("id") == null) ||
@@ -168,7 +168,6 @@ public class SalvoController {
             }
             else {
             newSalvo.setGamePlayer(currentGamePlayer);
-            //newSalvo.setTurn(currentGamePlayer.getGame().getCurrentTurn());
             salvorepo.save(newSalvo);
             return new ResponseEntity<>("Salvo successfully fired!", HttpStatus.CREATED);
             }
