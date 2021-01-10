@@ -19,8 +19,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-rest'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
-	//runtimeOnly 'com.h2database:h2' // RESTORE TO WORK IN LOCAL
-	compile("org.postgresql:postgresql") //COMMENT TO WORK IN LOCAL
+	//runtimeOnly 'com.h2database:h2' // RESTORE TO WORK IN LOCAL!
+	compile("org.postgresql:postgresql") //COMMENT TO WORK IN LOCAL!
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	compile("org.springframework.boot:spring-boot-starter-security")
 }
