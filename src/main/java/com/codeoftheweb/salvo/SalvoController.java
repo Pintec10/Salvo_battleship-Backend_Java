@@ -60,6 +60,12 @@ public class SalvoController {
     }
 
     private boolean isGuest(Authentication authentication) {
+        if (authentication == null) {
+            System.out.println("--- AUTH NULL! ---");
+        }
+        if (authentication instanceof AnonymousAuthenticationToken) {
+            System.out.println("--- ANONYMOUS AUTH TOKEN! ---");
+        }
         return authentication == null || authentication instanceof AnonymousAuthenticationToken;
     }
 
