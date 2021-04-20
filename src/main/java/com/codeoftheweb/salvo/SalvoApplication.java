@@ -284,8 +284,15 @@ class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	// RM NOTE: these two methods added in attempt to solve SameSite cookie issue
 	private void handleSuccessfulLogin(HttpServletRequest request, HttpServletResponse response) {
 		System.out.println("--- enter handleSuccessfulLogin ---");
+		System.out.println("--- first response Set-Cookie headers:");
+		System.out.println(response.getHeaders("Set-Cookie"));
 		clearAuthenticationAttributes(request);
+		System.out.println("--- middle response Set-Cookie headers:");
+		System.out.println(response.getHeaders("Set-Cookie"));
 		addSameSiteCookieAttribute(response);
+		System.out.println("--- final response Set-Cookie headers:");
+		System.out.println(response.getHeaders("Set-Cookie"));
+
 	}
 
 	private void addSameSiteCookieAttribute(HttpServletResponse response) {
@@ -295,6 +302,7 @@ class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		// there can be multiple Set-Cookie attributes
 		for (String header : headers) {
 			if (firstHeader) {
+				System.out.println("--- first header");
 				response.setHeader(HttpHeaders.SET_COOKIE,
 						String.format("%s; %s", header, "SameSite=None; Secure"));
 				firstHeader = false;
