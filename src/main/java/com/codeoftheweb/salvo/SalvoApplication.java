@@ -285,19 +285,37 @@ class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	private void handleSuccessfulLogin(HttpServletRequest request, HttpServletResponse response) {
 		System.out.println("--- enter handleSuccessfulLogin ---");
 		System.out.println("--- first response Set-Cookie headers:");
-		System.out.println(response.getHeaders("Set-Cookie"));
+		if (response.getHeaders("Set-Cookie").toArray().length >0 ) {
+			System.out.println(response.getHeaders("Set-Cookie").toArray()[0]);
+		} else {
+			System.out.println(response.getHeaders("Set-Cookie").toArray().length);
+		}
+
 		clearAuthenticationAttributes(request);
 		System.out.println("--- middle response Set-Cookie headers:");
-		System.out.println(response.getHeaders("Set-Cookie"));
+		if (response.getHeaders("Set-Cookie").toArray().length >0 ) {
+			System.out.println(response.getHeaders("Set-Cookie").toArray()[0]);
+		} else {
+			System.out.println(response.getHeaders("Set-Cookie").toArray().length);
+		}
+
 		addSameSiteCookieAttribute(response);
 		System.out.println("--- final response Set-Cookie headers:");
-		System.out.println(response.getHeaders("Set-Cookie"));
+		if (response.getHeaders("Set-Cookie").toArray().length >0 ) {
+			System.out.println(response.getHeaders("Set-Cookie").toArray()[0]);
+		} else {
+			System.out.println(response.getHeaders("Set-Cookie").toArray().length);
+		}
 
 	}
 
 	private void addSameSiteCookieAttribute(HttpServletResponse response) {
 		System.out.println("--- enter addSameSiteCookieAttribute ---");
 		Collection<String> headers = response.getHeaders(HttpHeaders.SET_COOKIE);
+		if (headers.size() == 0) {
+			System.out.println("--- No Set-Cookie header present! Adding it");
+			response.addHeader(HttpHeaders.SET_COOKIE, "SameSite=None; Secure");
+		}
 		boolean firstHeader = true;
 		// there can be multiple Set-Cookie attributes
 		for (String header : headers) {
