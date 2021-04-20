@@ -6,6 +6,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.GlobalAuthenticationConfigurerAdapter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -267,7 +268,10 @@ class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		http.exceptionHandling().authenticationEntryPoint((req, res, exc) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED));
 
 		// if login is successful, just clear the flags asking for authentication
-		http.formLogin().successHandler((req, res, auth) -> clearAuthenticationAttributes(req));
+		// RM NOTE: commented one was the original way
+		//http.formLogin().successHandler((req, res, auth) -> clearAuthenticationAttributes(req));
+		http.formLogin().successHandler((req, res, auth) -> handleSuccessfulLogin(req, res));
+
 
 		// if login fails, just send an authentication failure response
 		http.formLogin().failureHandler((req, res, exc) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED));
@@ -275,6 +279,28 @@ class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		// if logout is successful, just send a success response
 		http.logout().logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler());
 
+	}
+
+	// RM NOTE: these two methods added in attempt to solve SameSite cookie issue
+	private void handleSuccessfulLogin(HttpServletRequest request, HttpServletResponse response) {
+		addSameSiteCookieAttribute(response);
+		clearAuthenticationAttributes(request);
+	}
+
+	private void addSameSiteCookieAttribute(HttpServletResponse response) {
+		Collection<String> headers = response.getHeaders(HttpHeaders.SET_COOKIE);
+		boolean firstHeader = true;
+		// there can be multiple Set-Cookie attributes
+		for (String header : headers) {
+			if (firstHeader) {
+				response.setHeader(HttpHeaders.SET_COOKIE,
+						String.format("%s; %s", header, "SameSite=None; Secure"));
+				firstHeader = false;
+				continue;
+			}
+			response.addHeader(HttpHeaders.SET_COOKIE,
+					String.format("%s; %s", header, "SameSite=None; Secure"));
+		}
 	}
 
 	private void clearAuthenticationAttributes(HttpServletRequest request) {
