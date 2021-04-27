@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.GlobalAuthenticationConfigurerAdapter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -19,6 +20,8 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.WebAttributes;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -311,10 +314,15 @@ class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 	private void addSameSiteCookieAttribute(HttpServletResponse response) {
 		System.out.println("--- enter addSameSiteCookieAttribute ---");
+		ServletRequestAttributes attr = (ServletRequestAttributes)
+				RequestContextHolder.currentRequestAttributes();
+		HttpSession session= attr.getRequest().getSession(true);
+		String id = session.getId();
+		String cookieValue = "JSESSIONID=" + id + "; SameSite=None; Secure";
 		Collection<String> headers = response.getHeaders(HttpHeaders.SET_COOKIE);
 		if (headers.size() == 0) {
 			System.out.println("--- No Set-Cookie header present! Adding it");
-			response.addHeader(HttpHeaders.SET_COOKIE, "SameSite=None; Secure");
+			response.addHeader(HttpHeaders.SET_COOKIE, cookieValue);
 		}
 		boolean firstHeader = true;
 		// there can be multiple Set-Cookie attributes
@@ -331,6 +339,16 @@ class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 			System.out.println("---- added header. -----");
 			System.out.println(headers.toString());
 		}
+
+
+	/*	ResponseCookie cookie = ResponseCookie.from("Hb", cookieUserId)
+				.maxAge(!isEmpty(cookieUserId) ? MAX_COOKIE_DURATION : 0)
+				.domain("test.com")
+				.sameSite("None")
+				.secure(true)
+				.path("/")
+				.build();
+		response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());*/
 	}
 
 	private void clearAuthenticationAttributes(HttpServletRequest request) {
