@@ -26,7 +26,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                     //endpoint to which the client needs to connect for handshake
                 .setAllowedOrigins("http://localhost:8081",
                         "chrome-extension://ggnhohnkfcpcanfekomdkjffnfcjnjam", //to use APIC extension for Chrome
-                        "https://salvogame.netlify.com")
+                        "https://salvogame.netlify.app")
                 .withSockJS();
     }
 
