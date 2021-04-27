@@ -271,8 +271,6 @@ class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		http.exceptionHandling().authenticationEntryPoint((req, res, exc) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED));
 
 		// if login is successful, just clear the flags asking for authentication
-		// RM NOTE: commented one was the original way
-		//http.formLogin().successHandler((req, res, auth) -> clearAuthenticationAttributes(req));
 		http.formLogin().successHandler((req, res, auth) -> handleSuccessfulLogin(req, res));
 
 
@@ -286,34 +284,11 @@ class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 	// RM NOTE: these two methods added in attempt to solve SameSite cookie issue
 	private void handleSuccessfulLogin(HttpServletRequest request, HttpServletResponse response) {
-		System.out.println("--- enter handleSuccessfulLogin ---");
-		System.out.println("--- first response Set-Cookie headers:");
-		if (response.getHeaders("Set-Cookie").toArray().length >0 ) {
-			System.out.println(response.getHeaders("Set-Cookie").toArray()[0]);
-		} else {
-			System.out.println(response.getHeaders("Set-Cookie").toArray().length);
-		}
-
 		clearAuthenticationAttributes(request);
-		System.out.println("--- middle response Set-Cookie headers:");
-		if (response.getHeaders("Set-Cookie").toArray().length >0 ) {
-			System.out.println(response.getHeaders("Set-Cookie").toArray()[0]);
-		} else {
-			System.out.println(response.getHeaders("Set-Cookie").toArray().length);
-		}
-
 		addSameSiteCookieAttribute(response);
-		System.out.println("--- final response Set-Cookie headers:");
-		if (response.getHeaders("Set-Cookie").toArray().length >0 ) {
-			System.out.println(response.getHeaders("Set-Cookie").toArray()[0]);
-		} else {
-			System.out.println(response.getHeaders("Set-Cookie").toArray().length);
-		}
-
 	}
 
 	private void addSameSiteCookieAttribute(HttpServletResponse response) {
-		System.out.println("--- enter addSameSiteCookieAttribute ---");
 		ServletRequestAttributes attr = (ServletRequestAttributes)
 				RequestContextHolder.currentRequestAttributes();
 		HttpSession session= attr.getRequest().getSession(true);
@@ -321,14 +296,12 @@ class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		String cookieValue = "JSESSIONID=" + id + "; SameSite=None; Secure";
 		Collection<String> headers = response.getHeaders(HttpHeaders.SET_COOKIE);
 		if (headers.size() == 0) {
-			System.out.println("--- No Set-Cookie header present! Adding it");
 			response.addHeader(HttpHeaders.SET_COOKIE, cookieValue);
 		}
 		boolean firstHeader = true;
 		// there can be multiple Set-Cookie attributes
 		for (String header : headers) {
 			if (firstHeader) {
-				System.out.println("--- first header");
 				response.setHeader(HttpHeaders.SET_COOKIE,
 						String.format("%s; %s", header, "SameSite=None; Secure"));
 				firstHeader = false;
@@ -336,19 +309,8 @@ class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 			}
 			response.addHeader(HttpHeaders.SET_COOKIE,
 					String.format("%s; %s", header, "SameSite=None; Secure"));
-			System.out.println("---- added header. -----");
 			System.out.println(headers.toString());
 		}
-
-
-	/*	ResponseCookie cookie = ResponseCookie.from("Hb", cookieUserId)
-				.maxAge(!isEmpty(cookieUserId) ? MAX_COOKIE_DURATION : 0)
-				.domain("test.com")
-				.sameSite("None")
-				.secure(true)
-				.path("/")
-				.build();
-		response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());*/
 	}
 
 	private void clearAuthenticationAttributes(HttpServletRequest request) {
